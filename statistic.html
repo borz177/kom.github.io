@@ -3,77 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📊 Финансовая статистика</title>
+    <title>📊 Финансы: Статистика</title>
     <style>
         :root {
-            --bg: #f4f6f9;
-            --card: #ffffff;
-            --text: #1f2937;
-            --text-secondary: #6b7280;
-            --income: #10b981;
-            --income-bg: #d1fae5;
-            --expense: #ef4444;
-            --expense-bg: #fee2e2;
-            --savings: #3b82f6;
-            --savings-bg: #dbeafe;
-            --border: #e5e7eb;
-            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --bg: #f4f6f9; --card: #ffffff; --text: #1f2937; --text2: #6b7280;
+            --income: #10b981; --income-bg: #d1fae5;
+            --expense: #ef4444; --expense-bg: #fee2e2;
+            --savings: #3b82f6; --savings-bg: #dbeafe;
+            --border: #e5e7eb; --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; padding: 20px; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; padding: 16px; }
         .container { max-width: 800px; margin: 0 auto; }
+        h1 { text-align: center; margin-bottom: 16px; font-size: 1.6rem; }
         
-        h1 { text-align: center; margin-bottom: 20px; font-size: 1.8rem; }
-        
-        .input-area { background: var(--card); padding: 20px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 24px; }
-        textarea { width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical; min-height: 120px; transition: border-color 0.2s; }
-        textarea:focus { outline: none; border-color: #3b82f6; }
-        .btn { width: 100%; margin-top: 12px; padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-        .btn:hover { background: #2563eb; }
-
-        .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 24px; }
+        .summary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+        @media(min-width:600px) { .summary { grid-template-columns: repeat(4, 1fr); } }
         .stat-card { background: var(--card); padding: 16px; border-radius: 12px; box-shadow: var(--shadow); text-align: center; }
-        .stat-card h3 { font-size: 13px; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .stat-card .value { font-size: 20px; font-weight: 700; }
-        .val-income { color: var(--income); }
-        .val-expense { color: var(--expense); }
-        .val-balance { color: #8b5cf6; }
-        .val-savings { color: var(--savings); }
+        .stat-card h3 { font-size: 12px; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-card .value { font-size: 22px; font-weight: 800; }
+        .val-income { color: var(--income); } .val-expense { color: var(--expense); }
+        .val-balance { color: #8b5cf6; } .val-savings { color: var(--savings); }
 
         .entries { display: flex; flex-direction: column; gap: 12px; }
-        .entry-card { background: var(--card); padding: 16px; border-radius: 12px; box-shadow: var(--shadow); border-left: 4px solid transparent; }
+        .entry-card { background: var(--card); padding: 14px 16px; border-radius: 12px; box-shadow: var(--shadow); border-left: 4px solid transparent; }
         .entry-card.income { border-left-color: var(--income); }
         .entry-card.expense { border-left-color: var(--expense); }
         .entry-card.savings { border-left-color: var(--savings); }
         
         .entry-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .badge { padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
         .badge.income { background: var(--income-bg); color: #065f46; }
         .badge.expense { background: var(--expense-bg); color: #991b1b; }
         .badge.savings { background: var(--savings-bg); color: #1e40af; }
-        .date { font-size: 13px; color: var(--text-secondary); }
+        .date { font-size: 13px; color: var(--text2); font-weight: 500; }
         
-        .entry-body { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; }
-        .amount { font-size: 18px; font-weight: 700; }
-        .category { background: #f3f4f6; padding: 4px 8px; border-radius: 6px; font-size: 14px; }
-        .comment { font-size: 13px; color: var(--text-secondary); font-style: italic; margin-left: auto; }
+        .entry-body { display: flex; flex-wrap: wrap; gap: 10px; align-items: baseline; }
+        .amount { font-size: 18px; font-weight: 700; min-width: 80px; }
+        .category { background: #f3f4f6; padding: 4px 10px; border-radius: 8px; font-size: 14px; }
+        .comment { font-size: 13px; color: var(--text2); font-style: italic; margin-left: auto; max-width: 40%; word-break: break-word; }
 
-        @media (max-width: 480px) {
-            .summary { grid-template-columns: 1fr 1fr; }
-            .entry-body { flex-direction: column; gap: 6px; }
-            .comment { margin-left: 0; }
-        }
+        .footer { text-align: center; margin-top: 24px; padding: 12px; font-size: 12px; color: #9ca3af; }
+        .empty-state { text-align: center; padding: 30px; color: var(--text2); background: var(--card); border-radius: 12px; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>📊 Учет финансов</h1>
         
-        <div class="input-area">
-            <textarea id="rawInput" placeholder="Вставьте сюда текст из Заметок..."></textarea>
-            <button class="btn" onclick="processData()">🔄 Обработать и показать статистику</button>
-        </div>
-
         <div class="summary" id="summaryBlock">
             <div class="stat-card"><h3>💵 Доходы</h3><div class="value val-income" id="sumIncome">0 ₽</div></div>
             <div class="stat-card"><h3>💸 Расходы</h3><div class="value val-expense" id="sumExpense">0 ₽</div></div>
@@ -82,6 +59,7 @@
         </div>
 
         <div class="entries" id="entriesList"></div>
+        <div class="footer" id="updateTime"></div>
     </div>
 
     <script>
@@ -92,7 +70,7 @@
 
             blocks.forEach(block => {
                 const lines = block.trim().split('\n').filter(l => l.trim());
-                if (lines.length === 0) return;
+                if (lines.length < 2) return;
 
                 const typeLine = lines[0].trim();
                 let type = 'unknown';
@@ -100,37 +78,26 @@
                 else if (typeLine.includes('🟢')) type = 'income';
                 else if (typeLine.includes('🔴')) type = 'expense';
                 
-                if (type === 'unknown') return; // Пропускаем заголовки типа "Доходы - расходы"
+                if (type === 'unknown') return;
 
-                // Объединяем все строки после заголовка в одну
                 const rawContent = lines.slice(1).join(' ').replace(/\s+/g, ' ');
                 const dateMatch = rawContent.match(/(\d{2}-\d{2}-\d{4},?\s*\d{2}:\d{2})/);
                 const date = dateMatch ? dateMatch[1].replace(/\s*,\s*/g, ', ') : '—';
 
-                // Разбиваем по |
-                const segments = rawContent.split('|').map(s => s.trim()).filter(s => s);
-                const dataSegments = dateMatch ? segments.filter(s => s !== dateMatch[1]) : segments;
-
+                const segments = rawContent.split('|').map(s => s.trim()).filter(s => s && s !== date);
                 let amount = 0, category = '', comment = '';
 
-                dataSegments.forEach(seg => {
+                segments.forEach(seg => {
                     const numMatch = seg.match(/(\d+(?:\.\d+)?)/);
-                    // Ищем число, если оно ещё не найдено
                     if (numMatch && amount === 0) {
                         amount = parseFloat(numMatch[1]);
                         const extra = seg.replace(numMatch[0], '').replace(/[₽$€]/g, '').trim();
                         if (extra) comment += ' ' + extra;
-                    } 
-                    // Ищем категорию (обычно содержит эмодзи)
-                    else if (/[\p{Emoji}]/u.test(seg) && !category) {
+                    } else if (/[\p{Emoji}]/u.test(seg) && !category) {
                         category = seg;
-                    } 
-                    // Если категории нет, считаем текущий сегмент категорией
-                    else if (!category) {
+                    } else if (!category) {
                         category = seg;
-                    } 
-                    // Всё остальное идёт в комментарий
-                    else {
+                    } else {
                         comment += ' ' + seg;
                     }
                 });
@@ -145,37 +112,31 @@
             return { entries, totalIncome, totalExpense, totalSavings, balance: totalIncome - totalExpense };
         }
 
-        function processData() {
-            const text = document.getElementById('rawInput').value;
-            if (!text.trim()) {
-                alert('⚠️ Вставьте текст из заметок в поле ввода!');
-                return;
-            }
-
+        function renderDashboard(text) {
             const { entries, totalIncome, totalExpense, totalSavings, balance } = parseFinanceData(text);
-
-            // Обновляем сводку
+            
             document.getElementById('sumIncome').textContent = totalIncome.toLocaleString('ru-RU') + ' ₽';
             document.getElementById('sumExpense').textContent = totalExpense.toLocaleString('ru-RU') + ' ₽';
             document.getElementById('sumBalance').textContent = balance.toLocaleString('ru-RU') + ' ₽';
             document.getElementById('sumSavings').textContent = totalSavings.toLocaleString('ru-RU') + ' ₽';
+            document.getElementById('updateTime').textContent = `🕒 Обновлено: ${new Date().toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute:'2-digit' })}`;
 
-            // Рендерим записи (сортировка: новые сверху)
             const container = document.getElementById('entriesList');
             container.innerHTML = '';
-            entries.sort((a, b) => b.date.localeCompare(a.date));
-
+            
             if (entries.length === 0) {
-                container.innerHTML = '<p style="text-align:center;color:#6b7280;">Не удалось найти записи. Проверьте формат текста.</p>';
+                container.innerHTML = '<div class="empty-state">📭 Записи не найдены. Проверьте формат данных.</div>';
                 return;
             }
+
+            entries.sort((a, b) => b.date.localeCompare(a.date));
 
             entries.forEach(e => {
                 const card = document.createElement('div');
                 card.className = `entry-card ${e.type}`;
                 card.innerHTML = `
                     <div class="entry-header">
-                        <span class="badge ${e.type}">${e.type === 'income' ? '🟢 ДОХОД' : e.type === 'expense' ? '🔴 РАСХОД' : '💸 НАКОПЛЕНИЯ'}</span>
+                        <span class="badge ${e.type}">${e.type === 'income' ? '🟢 Доход' : e.type === 'expense' ? '🔴 Расход' : '💸 Накопления'}</span>
                         <span class="date">${e.date}</span>
                     </div>
                     <div class="entry-body">
@@ -187,6 +148,23 @@
                 container.appendChild(card);
             });
         }
+
+        // 🚀 Читаем данные из URL параметра ?data=...
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const encodedData = urlParams.get('data');
+            
+            if (encodedData) {
+                try {
+                    const decodedData = decodeURIComponent(encodedData);
+                    renderDashboard(decodedData);
+                } catch (e) {
+                    document.getElementById('entriesList').innerHTML = '<div class="empty-state">❌ Ошибка декодирования данных.</div>';
+                }
+            } else {
+                document.getElementById('entriesList').innerHTML = '<div class="empty-state">ℹ️ Нет данных. Запустите команду "Учет финансов" → "Статистика".</div>';
+            }
+        });
     </script>
 </body>
 </html>
