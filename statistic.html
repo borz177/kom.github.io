@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -10,7 +11,7 @@
             --income: #10b981; --income-bg: #d1fae5;
             --expense: #ef4444; --expense-bg: #fee2e2;
             --savings: #3b82f6; --savings-bg: #dbeafe;
-            --border: #e5e7eb; --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; padding: 16px; }
@@ -64,6 +65,16 @@
 
     <script>
         function parseFinanceData(text) {
+            // 🔧 АВТОМАТИЧЕСКАЯ ОЧИСТКА ОТ JSON {"text":"..."}
+            if (text.trim().startsWith('{')) {
+                try {
+                    const json = JSON.parse(text);
+                    if (json.text) text = json.text;
+                } catch (e) {
+                    // Если не JSON, оставляем как есть
+                }
+            }
+
             const blocks = text.split(/\n\s*\n/);
             const entries = [];
             let totalIncome = 0, totalExpense = 0, totalSavings = 0;
@@ -149,7 +160,6 @@
             });
         }
 
-        // 🚀 Читаем данные из URL параметра ?data=...
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const encodedData = urlParams.get('data');
@@ -162,7 +172,7 @@
                     document.getElementById('entriesList').innerHTML = '<div class="empty-state">❌ Ошибка декодирования данных.</div>';
                 }
             } else {
-                document.getElementById('entriesList').innerHTML = '<div class="empty-state">ℹ️ Нет данных. Запустите команду "Учет финансов" → "Статистика".</div>';
+                document.getElementById('entriesList').innerHTML = '<div class="empty-state">ℹ️ Нет данных. Запустите команду "Учет финансов".</div>';
             }
         });
     </script>
