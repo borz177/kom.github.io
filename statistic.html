@@ -10,20 +10,12 @@
             --income: #10b981; --income-bg: #d1fae5;
             --expense: #ef4444; --expense-bg: #fee2e2;
             --savings: #3b82f6; --savings-bg: #dbeafe;
-            --primary: #3b82f6; --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; padding: 16px; }
         .container { max-width: 800px; margin: 0 auto; }
         h1 { text-align: center; margin-bottom: 16px; font-size: 1.6rem; }
-        
-        /* Фильтры */
-        .filters { background: var(--card); padding: 16px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: end; justify-content: center; }
-        .filter-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 120px; }
-        .filter-group label { font-size: 12px; color: var(--text2); font-weight: 600; }
-        .filter-group input { padding: 8px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 14px; width: 100%; }
-        .btn-filter { padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; height: 38px; }
-        .btn-reset { padding: 8px 16px; background: #f3f4f6; color: var(--text); border: none; border-radius: 6px; font-weight: 600; cursor: pointer; height: 38px; }
         
         .summary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
         @media(min-width:600px) { .summary { grid-template-columns: repeat(4, 1fr); } }
@@ -34,7 +26,7 @@
         .val-balance { color: #8b5cf6; } .val-savings { color: var(--savings); }
 
         .entries { display: flex; flex-direction: column; gap: 12px; }
-        .entry-card { background: var(--card); padding: 14px 16px; border-radius: 12px; box-shadow: var(--shadow); border-left: 4px solid transparent; transition: opacity 0.3s; }
+        .entry-card { background: var(--card); padding: 14px 16px; border-radius: 12px; box-shadow: var(--shadow); border-left: 4px solid transparent; }
         .entry-card.income { border-left-color: var(--income); }
         .entry-card.expense { border-left-color: var(--expense); }
         .entry-card.savings { border-left-color: var(--savings); }
@@ -59,20 +51,6 @@
     <div class="container">
         <h1>📊 Учет финансов</h1>
         
-        <!-- Панель фильтров -->
-        <div class="filters">
-            <div class="filter-group">
-                <label>Дата с:</label>
-                <input type="date" id="dateStart">
-            </div>
-            <div class="filter-group">
-                <label>Дата по:</label>
-                <input type="date" id="dateEnd">
-            </div>
-            <button class="btn-filter" onclick="applyFilter()">🔍 Фильтр</button>
-            <button class="btn-reset" onclick="resetFilter()">↺ Сброс</button>
-        </div>
-
         <div class="summary" id="summaryBlock">
             <div class="stat-card"><h3>💵 Доходы</h3><div class="value val-income" id="sumIncome">0 ₽</div></div>
             <div class="stat-card"><h3>💸 Расходы</h3><div class="value val-expense" id="sumExpense">0 ₽</div></div>
@@ -85,19 +63,21 @@
     </div>
 
     <script>
-        let ALL_ENTRIES = []; // Храним все записи глобально
-
         function parseFinanceData(text) {
+            // 🔧 АВТОМАТИЧЕСКАЯ ОЧИСТКА ОТ JSON {"text":"..."}
             if (text.trim().startsWith('{')) {
                 try {
                     const json = JSON.parse(text);
                     if (json.text) text = json.text;
-                } catch (e) {}
+                } catch (e) {
+                    // Если не JSON, оставляем как есть
+                }
             }
 
             const blocks = text.split(/\n\s*\n/);
             const entries = [];
-            
+            let totalIncome = 0, totalExpense = 0, totalSavings = 0;
+
             blocks.forEach(block => {
                 const lines = block.trim().split('\n').filter(l => l.trim());
                 if (lines.length < 2) return;
@@ -111,19 +91,10 @@
                 if (type === 'unknown') return;
 
                 const rawContent = lines.slice(1).join(' ').replace(/\s+/g, ' ');
-                const dateMatch = rawContent.match(/(\d{2}-\d{2}-\d{4})/); // Берем только дату DD-MM-YYYY
-                
-                // Парсинг даты для сортировки и фильтрации
-                let dateObj = null;
-                let dateStr = '—';
-                if (dateMatch) {
-                    const parts = dateMatch[1].split('-');
-                    // Создаем объект даты (год, месяц-1, день)
-                    dateObj = new Date(parts[2], parts[1] - 1, parts[0]);
-                    dateStr = dateMatch[1];
-                }
+                const dateMatch = rawContent.match(/(\d{2}-\d{2}-\d{4},?\s*\d{2}:\d{2})/);
+                const date = dateMatch ? dateMatch[1].replace(/\s*,\s*/g, ', ') : '—';
 
-                const segments = rawContent.split('|').map(s => s.trim()).filter(s => s && s !== dateMatch?.[0]);
+                const segments = rawContent.split('|').map(s => s.trim()).filter(s => s && s !== date);
                 let amount = 0, category = '', comment = '';
 
                 segments.forEach(seg => {
@@ -141,43 +112,36 @@
                     }
                 });
 
-                entries.push({ 
-                    type, 
-                    date: dateStr, 
-                    dateObj: dateObj, 
-                    amount, 
-                    category: category.trim(), 
-                    comment: comment.trim() 
-                });
+                if (type === 'income') totalIncome += amount;
+                if (type === 'expense') totalExpense += amount;
+                if (type === 'savings') totalSavings += amount;
+
+                entries.push({ type, date, amount, category: category.trim(), comment: comment.trim() });
             });
 
-            return entries;
+            return { entries, totalIncome, totalExpense, totalSavings, balance: totalIncome - totalExpense };
         }
 
-        function renderDashboard(entries) {
-            let totalIncome = 0, totalExpense = 0, totalSavings = 0;
+        function renderDashboard(text) {
+            const { entries, totalIncome, totalExpense, totalSavings, balance } = parseFinanceData(text);
+            
+            document.getElementById('sumIncome').textContent = totalIncome.toLocaleString('ru-RU') + ' ₽';
+            document.getElementById('sumExpense').textContent = totalExpense.toLocaleString('ru-RU') + ' ₽';
+            document.getElementById('sumBalance').textContent = balance.toLocaleString('ru-RU') + ' ₽';
+            document.getElementById('sumSavings').textContent = totalSavings.toLocaleString('ru-RU') + ' ₽';
+            document.getElementById('updateTime').textContent = `🕒 Обновлено: ${new Date().toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute:'2-digit' })}`;
 
             const container = document.getElementById('entriesList');
             container.innerHTML = '';
             
             if (entries.length === 0) {
-                container.innerHTML = '<div class="empty-state">📭 Записи не найдены за выбранный период.</div>';
-                updateSummary(0, 0, 0, 0);
+                container.innerHTML = '<div class="empty-state">📭 Записи не найдены. Проверьте формат данных.</div>';
                 return;
             }
 
-            // Сортировка: новые сверху
-            entries.sort((a, b) => {
-                if (!a.dateObj) return 1;
-                if (!b.dateObj) return -1;
-                return b.dateObj.getTime() - a.dateObj.getTime();
-            });
+            entries.sort((a, b) => b.date.localeCompare(a.date));
 
             entries.forEach(e => {
-                if (e.type === 'income') totalIncome += e.amount;
-                if (e.type === 'expense') totalExpense += e.amount;
-                if (e.type === 'savings') totalSavings += e.amount;
-
                 const card = document.createElement('div');
                 card.className = `entry-card ${e.type}`;
                 card.innerHTML = `
@@ -193,47 +157,7 @@
                 `;
                 container.appendChild(card);
             });
-
-            updateSummary(totalIncome, totalExpense, totalSavings, totalIncome - totalExpense);
         }
-
-        function updateSummary(income, expense, savings, balance) {
-            document.getElementById('sumIncome').textContent = income.toLocaleString('ru-RU') + ' ₽';
-            document.getElementById('sumExpense').textContent = expense.toLocaleString('ru-RU') + ' ₽';
-            document.getElementById('sumBalance').textContent = balance.toLocaleString('ru-RU') + ' ₽';
-            document.getElementById('sumSavings').textContent = savings.toLocaleString('ru-RU') + ' ₽';
-            document.getElementById('updateTime').textContent = `🕒 Обновлено: ${new Date().toLocaleString('ru-RU', { hour: '2-digit', minute:'2-digit' })}`;
-        }
-
-        // --- Логика фильтрации ---
-
-        function applyFilter() {
-            const startVal = document.getElementById('dateStart').value;
-            const endVal = document.getElementById('dateEnd').value;
-
-            if (!startVal && !endVal) {
-                resetFilter();
-                return;
-            }
-
-            const startDate = startVal ? new Date(startVal) : new Date('1900-01-01');
-            const endDate = endVal ? new Date(endVal) : new Date('2099-12-31');
-
-            const filtered = ALL_ENTRIES.filter(item => {
-                if (!item.dateObj) return false;
-                return item.dateObj >= startDate && item.dateObj <= endDate;
-            });
-
-            renderDashboard(filtered);
-        }
-
-        function resetFilter() {
-            document.getElementById('dateStart').value = '';
-            document.getElementById('dateEnd').value = '';
-            renderDashboard(ALL_ENTRIES);
-        }
-
-        // --- Инициализация ---
 
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -242,14 +166,12 @@
             if (encodedData) {
                 try {
                     const decodedData = decodeURIComponent(encodedData);
-                    ALL_ENTRIES = parseFinanceData(decodedData);
-                    renderDashboard(ALL_ENTRIES);
+                    renderDashboard(decodedData);
                 } catch (e) {
-                    console.error(e);
-                    document.getElementById('entriesList').innerHTML = '<div class="empty-state">❌ Ошибка данных.</div>';
+                    document.getElementById('entriesList').innerHTML = '<div class="empty-state">❌ Ошибка декодирования данных.</div>';
                 }
             } else {
-                document.getElementById('entriesList').innerHTML = '<div class="empty-state">ℹ️ Нет данных.</div>';
+                document.getElementById('entriesList').innerHTML = '<div class="empty-state">ℹ️ Нет данных. Запустите команду "Учет финансов".</div>';
             }
         });
     </script>
