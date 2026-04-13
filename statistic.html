@@ -56,87 +56,139 @@
       margin-top: 0;
       color: #76c7c0;
     }
+    /* Стиль для формы */
+    form {
+      margin-top: 20px;
+      background-color: #333;
+      padding: 15px;
+      border-radius: 8px;
+    }
+    input, select {
+      margin: 5px;
+      padding: 10px;
+      font-size: 16px;
+      background-color: #444;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #76c7c0;
+      color: #fff;
+      padding: 10px 20px;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #64a3a3;
+    }
   </style>
 </head>
 <body>
 
   <h1>Финансовая информация</h1>
 
-  <!-- Статистика за день -->
   <div class="summary">
     <h3>Статистика за сегодня</h3>
-    <p>💸 Накоплено: <span id="todayTotal"></span> ₽</p>
-    <p>🟢 Доходы: <span id="todayIncome"></span> ₽</p>
-    <p>🔴 Расходы: <span id="todayExpenses"></span> ₽</p>
-  </div>
-
-  <!-- Статистика за неделю -->
-  <div class="summary">
-    <h3>Статистика за неделю</h3>
-    <p>💸 Накоплено: <span id="weekTotal"></span> ₽</p>
-    <p>🟢 Доходы: <span id="weekIncome"></span> ₽</p>
-    <p>🔴 Расходы: <span id="weekExpenses"></span> ₽</p>
-  </div>
-
-  <!-- Статистика за месяц -->
-  <div class="summary">
-    <h3>Статистика за месяц</h3>
-    <p>💸 Накоплено: <span id="monthTotal"></span> ₽</p>
-    <p>🟢 Доходы: <span id="monthIncome"></span> ₽</p>
-    <p>🔴 Расходы: <span id="monthExpenses"></span> ₽</p>
+    <p>💸 Накоплено: <span id="todayTotal">0</span> ₽</p>
+    <p>🟢 Доходы: <span id="todayIncome">0</span> ₽</p>
+    <p>🔴 Расходы: <span id="todayExpenses">0</span> ₽</p>
   </div>
 
   <div id="transactionsContainer"></div>
 
+  <!-- Форма для добавления новых транзакций -->
+  <form id="transactionForm">
+    <h3>Добавить транзакцию</h3>
+    <input type="number" id="amount" placeholder="Сумма" required>
+    <select id="category" required>
+      <option value="💼 Подработка">💼 Подработка</option>
+      <option value="💰 Зарплата">💰 Зарплата</option>
+      <option value="🛒 Продукты">🛒 Продукты</option>
+      <option value="🍽 Кафе, ресторан">🍽 Кафе, ресторан</option>
+      <option value="🏠 Квартира, коммуналка">🏠 Квартира, коммуналка</option>
+      <option value="📦 Другое">📦 Другое</option>
+    </select>
+    <input type="text" id="comment" placeholder="Комментарий" required>
+    <button type="submit">Добавить транзакцию</button>
+  </form>
+
   <script>
-    // Функция для добавления транзакций
-    function addTransaction(type, date, amount, category, comment) {
+    // Массив для хранения транзакций
+    let transactions = [];
+
+    // Функция для отображения транзакций
+    function addTransaction(transaction) {
       const transactionContainer = document.getElementById("transactionsContainer");
 
-      const transaction = document.createElement('div');
-      transaction.classList.add('transaction');
-      transaction.classList.add(type);
+      const transactionElement = document.createElement('div');
+      transactionElement.classList.add('transaction');
+      transactionElement.classList.add(transaction.type);
 
-      transaction.innerHTML = `
-        <h2>${type === 'income' ? '🟢 ДОХОД' : '🔴 РАСХОД'}</h2>
+      transactionElement.innerHTML = `
+        <h2>${transaction.type === 'income' ? '🟢 ДОХОД' : '🔴 РАСХОД'}</h2>
         <p class="info">
-          <span class="date">${date}</span> | <span class="amount">${amount} ₽</span><br>
-          <span class="category">${category}</span> | <span class="comment">${comment}</span>
+          <span class="date">${transaction.date}</span> | <span class="amount">${transaction.amount} ₽</span><br>
+          <span class="category">${transaction.category}</span> | <span class="comment">${transaction.comment}</span>
         </p>
       `;
-      transactionContainer.appendChild(transaction);
+      transactionContainer.appendChild(transactionElement);
     }
 
-    // Данные для отображения
-    const transactions = [
-      { type: 'income', date: '12-04-2026, 17:39', amount: 5000, category: '💼 Подработка', comment: 'Без комментариев' },
-      { type: 'income', date: '12-04-2026, 17:40', amount: 5000, category: '💰 Зарплата', comment: 'Без комментариев' },
-      { type: 'expense', date: '12-04-2026, 20:47', amount: 200, category: '🛒 Продукты', comment: 'Без комментариев' },
-      { type: 'income', date: '13-04-2026, 16:50', amount: 2000, category: '💼 Подработка', comment: 'Без комментариев' },
-      { type: 'income', date: '13-04-2026, 16:57', amount: 5000, category: '📦 Другое', comment: 'Без комментариев' },
-      { type: 'expense', date: '13-04-2026, 17:01', amount: 266, category: '📝 Другое', comment: 'Без комментариев' },
-      { type: 'expense', date: '13-04-2026, 17:04', amount: 55, category: '🌐 Интернет', comment: 'Просто' },
-      { type: 'expense', date: '13-04-2026, 17:05', amount: 554, category: '🏠 Квартира, Коммуналка', comment: 'Без комментариев' },
-      { type: 'expense', date: '13-04-2026, 17:15', amount: 94, category: '🍽️ Кафе, ресторан', comment: 'Просто' }
-    ];
+    // Обновление статистики
+    function updateStats() {
+      let totalIncome = 0;
+      let totalExpenses = 0;
+      transactions.forEach(transaction => {
+        if (transaction.type === 'income') totalIncome += transaction.amount;
+        if (transaction.type === 'expense') totalExpenses += transaction.amount;
+      });
+      document.getElementById('todayIncome').textContent = totalIncome;
+      document.getElementById('todayExpenses').textContent = totalExpenses;
+      document.getElementById('todayTotal').textContent = totalIncome - totalExpenses;
+    }
 
-    // Добавление транзакций
-    transactions.forEach(transaction => {
-      addTransaction(transaction.type, transaction.date, transaction.amount, transaction.category, transaction.comment);
+    // Обработчик отправки формы
+    document.getElementById("transactionForm").addEventListener("submit", function(event) {
+      event.preventDefault();
+
+      const amount = parseFloat(document.getElementById("amount").value);
+      const category = document.getElementById("category").value;
+      const comment = document.getElementById("comment").value;
+      const date = new Date().toLocaleString(); // Текущая дата и время
+
+      // Создаём новую транзакцию
+      const transaction = {
+        type: amount >= 0 ? 'income' : 'expense',
+        date: date,
+        amount: Math.abs(amount),
+        category: category,
+        comment: comment
+      };
+
+      // Добавляем транзакцию в массив
+      transactions.push(transaction);
+
+      // Добавляем транзакцию на страницу
+      addTransaction(transaction);
+
+      // Обновляем статистику
+      updateStats();
+
+      // Очистить форму
+      document.getElementById("transactionForm").reset();
     });
 
-    // Статистика за сегодня, неделю и месяц (примерные данные)
-    document.getElementById('todayIncome').textContent = 12000;
-    document.getElementById('todayExpenses').textContent = 500;
-    document.getElementById('todayTotal').textContent = 11500;
+    // Изначально добавляем несколько транзакций для демонстрации
+    transactions.push({ type: 'income', date: '12-04-2026, 17:39', amount: 5000, category: '💼 Подработка', comment: 'Без комментариев' });
+    transactions.push({ type: 'expense', date: '12-04-2026, 20:47', amount: 200, category: '🛒 Продукты', comment: 'Без комментариев' });
+    transactions.push({ type: 'income', date: '13-04-2026, 16:50', amount: 2000, category: '💼 Подработка', comment: 'Без комментариев' });
 
-    document.getElementById('weekIncome').textContent = 25000;
-    document.getElementById('weekExpenses').textContent = 4000;
-    document.getElementById('weekTotal').textContent = 21000;
-
-    document.getElementById('monthIncome').textContent = 35000;
-    document.getElementById('monthExpenses').textContent = 6000;
-    document.getElementById('monthTotal').textContent = 29000;
+    // Отображаем изначальные транзакции и обновляем статистику
+    transactions.forEach(transaction => addTransaction(transaction));
+    updateStats();
   </script>
 
 </body>
