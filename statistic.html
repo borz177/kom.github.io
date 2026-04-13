@@ -17,13 +17,10 @@
         .container { max-width: 800px; margin: 0 auto; }
         h1 { text-align: center; margin-bottom: 16px; font-size: 1.6rem; }
         
-        /* Фильтры */
-        .filters { background: var(--card); padding: 16px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: end; justify-content: center; }
-        .filter-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 120px; }
-        .filter-group label { font-size: 12px; color: var(--text2); font-weight: 600; }
-        .filter-group input { padding: 8px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 14px; width: 100%; }
-        .btn-filter { padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; height: 38px; }
-        .btn-reset { padding: 8px 16px; background: #f3f4f6; color: var(--text); border: none; border-radius: 6px; font-weight: 600; cursor: pointer; height: 38px; }
+        /* Кнопки фильтрации */
+        .filters { background: var(--card); padding: 12px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 20px; display: flex; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .btn-filter { flex: 1; min-width: 80px; padding: 10px; background: #f3f4f6; color: var(--text); border: none; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+        .btn-filter.active { background: var(--primary); color: white; }
         
         .summary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
         @media(min-width:600px) { .summary { grid-template-columns: repeat(4, 1fr); } }
@@ -34,7 +31,7 @@
         .val-balance { color: #8b5cf6; } .val-savings { color: var(--savings); }
 
         .entries { display: flex; flex-direction: column; gap: 12px; }
-        .entry-card { background: var(--card); padding: 14px 16px; border-radius: 12px; box-shadow: var(--shadow); border-left: 4px solid transparent; transition: opacity 0.3s; }
+        .entry-card { background: var(--card); padding: 14px 16px; border-radius: 12px; box-shadow: var(--shadow); border-left: 4px solid transparent; }
         .entry-card.income { border-left-color: var(--income); }
         .entry-card.expense { border-left-color: var(--expense); }
         .entry-card.savings { border-left-color: var(--savings); }
@@ -59,18 +56,12 @@
     <div class="container">
         <h1>📊 Учет финансов</h1>
         
-        <!-- Панель фильтров -->
+        <!-- Кнопки фильтрации -->
         <div class="filters">
-            <div class="filter-group">
-                <label>Дата с:</label>
-                <input type="date" id="dateStart">
-            </div>
-            <div class="filter-group">
-                <label>Дата по:</label>
-                <input type="date" id="dateEnd">
-            </div>
-            <button class="btn-filter" onclick="applyFilter()">🔍 Фильтр</button>
-            <button class="btn-reset" onclick="resetFilter()">↺ Сброс</button>
+            <button class="btn-filter active" onclick="filterPeriod('all')">Все</button>
+            <button class="btn-filter" onclick="filterPeriod('today')">Сегодня</button>
+            <button class="btn-filter" onclick="filterPeriod('week')">Неделя</button>
+            <button class="btn-filter" onclick="filterPeriod('month')">Месяц</button>
         </div>
 
         <div class="summary" id="summaryBlock">
@@ -85,10 +76,9 @@
     </div>
 
     <script>
-        let ALL_ENTRIES = []; // Храним все записи глобально
+        let ALL_ENTRIES = [];
 
         function parseFinanceData(text) {
-            // Очистка от JSON обертки {"text":"..."}
             if (text.trim().startsWith('{')) {
                 try {
                     const json = JSON.parse(text);
@@ -106,15 +96,15 @@
                 const typeLine = lines[0].trim();
                 let type = 'unknown';
                 if (typeLine.includes('💸')) type = 'savings';
-                else if (typeLine.includes('🟢')) type = 'income';
-                else if (typeLine.includes('🔴')) type = 'expense';
+                else if (typeLine.includes('🟢') || typeLine.toLowerCase().includes('доход')) type = 'income';
+                else if (typeLine.includes('🔴') || typeLine.toLowerCase().includes('расход')) type = 'expense';
                 
                 if (type === 'unknown') return;
 
-                // Объединяем все строки кроме первой (заголовка) в одну линию
-                const rawContent = lines.slice(1).join(' ').replace(/\s+/g, ' ');
+                // Объединяем содержимое блока
+                const rawContent = lines.slice(1).join(' ');
                 
-                // 1. Ищем дату (формат ДД-ММ-ГГГГ)
+                // 1. Ищем дату (ДД-ММ-ГГГГ)
                 const dateMatch = rawContent.match(/(\d{2}-\d{2}-\d{4})/);
                 let dateStr = '—';
                 let dateObj = null;
@@ -122,54 +112,44 @@
                 if (dateMatch) {
                     dateStr = dateMatch[1];
                     const parts = dateStr.split('-');
-                    // Создаем объект даты для фильтрации (Год, Месяц-1, День)
                     dateObj = new Date(parts[2], parts[1] - 1, parts[0]);
                 }
 
-                // Удаляем дату из строки для дальнейшего парсинга
-                const contentWithoutDate = rawContent.replace(dateMatch ? dateMatch[0] : '', '').replace(/^,\s*/, '');
-
-                // Разбиваем по разделителю |
-                const segments = contentWithoutDate.split('|').map(s => s.trim()).filter(s => s);
+                // Разбиваем по |
+                const segments = rawContent.split('|').map(s => s.trim()).filter(s => s);
                 
                 let amount = 0;
                 let category = '';
                 let comment = '';
-                let foundAmount = false;
+                
+                // Пропускаем первый сегмент, если там только дата и время
+                let startIndex = 0;
+                if (segments.length > 0 && /\d{2}:\d{2}/.test(segments[0])) {
+                    startIndex = 1;
+                }
 
-                segments.forEach(seg => {
-                    // Очищаем сегмент от валюты для поиска числа
-                    const cleanSeg = seg.replace(/[₽$€]/g, '');
+                for (let i = startIndex; i < segments.length; i++) {
+                    const seg = segments[i];
                     
-                    // Ищем число (сумму). Если нашли первое число - считаем его суммой
-                    const numMatch = cleanSeg.match(/(\d+(?:\.\d+)?)/);
-                    
-                    if (!foundAmount && numMatch) {
-                        amount = parseFloat(numMatch[1]);
-                        foundAmount = true;
-                        // Остаток сегмента после числа может быть комментарием
-                        const extra = cleanSeg.replace(numMatch[0], '').trim();
-                        if (extra) comment += ' ' + extra;
-                    } 
-                    // Если сумма уже найдена, или числа нет, то это категория или комментарий
-                    else {
-                        // Если в сегменте есть эмодзи и категория еще пуста - это категория
-                        if (/[\p{Emoji}]/u.test(seg) && !category) {
-                            category = seg;
-                        } 
-                        // Если категории нет, берем первый текстовый сегмент как категорию
-                        else if (!category) {
-                            category = seg;
-                        } 
-                        // Всё остальное - комментарий
-                        else {
-                            comment += ' ' + seg;
+                    // Ищем сумму: число, за которым может идти ₽, $ или пробел
+                    // Важно: сумма обычно идет первой после даты
+                    if (amount === 0) {
+                        const numMatch = seg.match(/^(\d+(?:\.\d+)?)\s*[₽$€]?$/);
+                        if (numMatch) {
+                            amount = parseFloat(numMatch[1]);
+                            continue; // Переходим к следующему сегменту
                         }
                     }
-                });
 
-                // Если категория пустая, пробуем взять из typeLine (редкий случай)
-                if (!category) category = typeLine;
+                    // Если сумма уже найдена, определяем категорию и комментарий
+                    if (/[\p{Emoji}]/u.test(seg)) {
+                        if (!category) category = seg;
+                        else comment += ' ' + seg;
+                    } else {
+                        if (!category) category = seg;
+                        else comment += ' ' + seg;
+                    }
+                }
 
                 entries.push({ 
                     type, 
@@ -186,17 +166,15 @@
 
         function renderDashboard(entries) {
             let totalIncome = 0, totalExpense = 0, totalSavings = 0;
-
             const container = document.getElementById('entriesList');
             container.innerHTML = '';
             
             if (entries.length === 0) {
-                container.innerHTML = '<div class="empty-state">📭 Записи не найдены за выбранный период.</div>';
+                container.innerHTML = '<div class="empty-state">📭 Нет записей.</div>';
                 updateSummary(0, 0, 0, 0);
                 return;
             }
 
-            // Сортировка: новые сверху
             entries.sort((a, b) => {
                 if (!a.dateObj) return 1;
                 if (!b.dateObj) return -1;
@@ -232,38 +210,34 @@
             document.getElementById('sumExpense').textContent = expense.toLocaleString('ru-RU') + ' ₽';
             document.getElementById('sumBalance').textContent = balance.toLocaleString('ru-RU') + ' ₽';
             document.getElementById('sumSavings').textContent = savings.toLocaleString('ru-RU') + ' ₽';
-            document.getElementById('updateTime').textContent = `🕒 Обновлено: ${new Date().toLocaleString('ru-RU', { hour: '2-digit', minute:'2-digit' })}`;
         }
 
-        // --- Логика фильтрации ---
+        function filterPeriod(period) {
+            // Обновляем активную кнопку
+            document.querySelectorAll('.btn-filter').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
 
-        function applyFilter() {
-            const startVal = document.getElementById('dateStart').value;
-            const endVal = document.getElementById('dateEnd').value;
+            const now = new Date();
+            const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            
+            let filtered = [];
 
-            if (!startVal && !endVal) {
-                resetFilter();
-                return;
+            if (period === 'all') {
+                filtered = ALL_ENTRIES;
+            } else if (period === 'today') {
+                filtered = ALL_ENTRIES.filter(item => item.dateObj && item.dateObj >= todayStart);
+            } else if (period === 'week') {
+                const weekAgo = new Date(todayStart);
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                filtered = ALL_ENTRIES.filter(item => item.dateObj && item.dateObj >= weekAgo);
+            } else if (period === 'month') {
+                const monthAgo = new Date(todayStart);
+                monthAgo.setMonth(monthAgo.getMonth() - 1);
+                filtered = ALL_ENTRIES.filter(item => item.dateObj && item.dateObj >= monthAgo);
             }
-
-            const startDate = startVal ? new Date(startVal) : new Date('1900-01-01');
-            const endDate = endVal ? new Date(endVal) : new Date('2099-12-31');
-
-            const filtered = ALL_ENTRIES.filter(item => {
-                if (!item.dateObj) return false;
-                return item.dateObj >= startDate && item.dateObj <= endDate;
-            });
 
             renderDashboard(filtered);
         }
-
-        function resetFilter() {
-            document.getElementById('dateStart').value = '';
-            document.getElementById('dateEnd').value = '';
-            renderDashboard(ALL_ENTRIES);
-        }
-
-        // --- Инициализация ---
 
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -278,8 +252,6 @@
                     console.error(e);
                     document.getElementById('entriesList').innerHTML = '<div class="empty-state">❌ Ошибка данных.</div>';
                 }
-            } else {
-                document.getElementById('entriesList').innerHTML = '<div class="empty-state">ℹ️ Нет данных.</div>';
             }
         });
     </script>
