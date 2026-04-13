@@ -1,195 +1,192 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Финансовая статистика</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #181818;
-      color: #fff;
-      padding: 20px;
-    }
-    h1 {
-      text-align: center;
-      font-size: 36px;
-      margin-bottom: 20px;
-    }
-    .transaction {
-      background-color: #2c2c2c;
-      padding: 15px;
-      margin: 10px 0;
-      border-radius: 8px;
-    }
-    .transaction h2 {
-      margin: 0;
-      font-size: 24px;
-      color: #76c7c0;
-    }
-    .transaction .info {
-      font-size: 18px;
-    }
-    .income {
-      color: #76c7c0;
-    }
-    .expense {
-      color: #e57373;
-    }
-    .category {
-      font-weight: bold;
-    }
-    .comment {
-      font-style: italic;
-      color: #bbb;
-    }
-    .date {
-      color: #aaa;
-    }
-    .summary {
-      background-color: #333;
-      padding: 15px;
-      border-radius: 8px;
-      margin-top: 30px;
-    }
-    .summary h3 {
-      margin-top: 0;
-      color: #76c7c0;
-    }
-    /* Стиль для формы */
-    form {
-      margin-top: 20px;
-      background-color: #333;
-      padding: 15px;
-      border-radius: 8px;
-    }
-    input, select {
-      margin: 5px;
-      padding: 10px;
-      font-size: 16px;
-      background-color: #444;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-    }
-    button {
-      background-color: #76c7c0;
-      color: #fff;
-      padding: 10px 20px;
-      border: none;
-      cursor: pointer;
-      border-radius: 4px;
-      font-size: 16px;
-    }
-    button:hover {
-      background-color: #64a3a3;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Финансовая статистика</title>
+    <style>
+        :root {
+            --bg: #f4f6f9;
+            --card: #ffffff;
+            --text: #1f2937;
+            --text-secondary: #6b7280;
+            --income: #10b981;
+            --income-bg: #d1fae5;
+            --expense: #ef4444;
+            --expense-bg: #fee2e2;
+            --savings: #3b82f6;
+            --savings-bg: #dbeafe;
+            --border: #e5e7eb;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        
+        h1 { text-align: center; margin-bottom: 20px; font-size: 1.8rem; }
+        
+        .input-area { background: var(--card); padding: 20px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 24px; }
+        textarea { width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical; min-height: 120px; transition: border-color 0.2s; }
+        textarea:focus { outline: none; border-color: #3b82f6; }
+        .btn { width: 100%; margin-top: 12px; padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .btn:hover { background: #2563eb; }
+
+        .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 24px; }
+        .stat-card { background: var(--card); padding: 16px; border-radius: 12px; box-shadow: var(--shadow); text-align: center; }
+        .stat-card h3 { font-size: 13px; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-card .value { font-size: 20px; font-weight: 700; }
+        .val-income { color: var(--income); }
+        .val-expense { color: var(--expense); }
+        .val-balance { color: #8b5cf6; }
+        .val-savings { color: var(--savings); }
+
+        .entries { display: flex; flex-direction: column; gap: 12px; }
+        .entry-card { background: var(--card); padding: 16px; border-radius: 12px; box-shadow: var(--shadow); border-left: 4px solid transparent; }
+        .entry-card.income { border-left-color: var(--income); }
+        .entry-card.expense { border-left-color: var(--expense); }
+        .entry-card.savings { border-left-color: var(--savings); }
+        
+        .entry-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+        .badge.income { background: var(--income-bg); color: #065f46; }
+        .badge.expense { background: var(--expense-bg); color: #991b1b; }
+        .badge.savings { background: var(--savings-bg); color: #1e40af; }
+        .date { font-size: 13px; color: var(--text-secondary); }
+        
+        .entry-body { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; }
+        .amount { font-size: 18px; font-weight: 700; }
+        .category { background: #f3f4f6; padding: 4px 8px; border-radius: 6px; font-size: 14px; }
+        .comment { font-size: 13px; color: var(--text-secondary); font-style: italic; margin-left: auto; }
+
+        @media (max-width: 480px) {
+            .summary { grid-template-columns: 1fr 1fr; }
+            .entry-body { flex-direction: column; gap: 6px; }
+            .comment { margin-left: 0; }
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <h1>📊 Учет финансов</h1>
+        
+        <div class="input-area">
+            <textarea id="rawInput" placeholder="Вставьте сюда текст из Заметок..."></textarea>
+            <button class="btn" onclick="processData()">🔄 Обработать и показать статистику</button>
+        </div>
 
-  <h1>Финансовая информация</h1>
+        <div class="summary" id="summaryBlock">
+            <div class="stat-card"><h3>💵 Доходы</h3><div class="value val-income" id="sumIncome">0 ₽</div></div>
+            <div class="stat-card"><h3>💸 Расходы</h3><div class="value val-expense" id="sumExpense">0 ₽</div></div>
+            <div class="stat-card"><h3>⚖️ Баланс</h3><div class="value val-balance" id="sumBalance">0 ₽</div></div>
+            <div class="stat-card"><h3>🏦 Накопления</h3><div class="value val-savings" id="sumSavings">0 ₽</div></div>
+        </div>
 
-  <div class="summary">
-    <h3>Статистика за сегодня</h3>
-    <p>💸 Накоплено: <span id="todayTotal">0</span> ₽</p>
-    <p>🟢 Доходы: <span id="todayIncome">0</span> ₽</p>
-    <p>🔴 Расходы: <span id="todayExpenses">0</span> ₽</p>
-  </div>
+        <div class="entries" id="entriesList"></div>
+    </div>
 
-  <div id="transactionsContainer"></div>
+    <script>
+        function parseFinanceData(text) {
+            const blocks = text.split(/\n\s*\n/);
+            const entries = [];
+            let totalIncome = 0, totalExpense = 0, totalSavings = 0;
 
-  <!-- Форма для добавления новых транзакций -->
-  <form id="transactionForm">
-    <h3>Добавить транзакцию</h3>
-    <input type="number" id="amount" placeholder="Сумма" required>
-    <select id="category" required>
-      <option value="💼 Подработка">💼 Подработка</option>
-      <option value="💰 Зарплата">💰 Зарплата</option>
-      <option value="🛒 Продукты">🛒 Продукты</option>
-      <option value="🍽 Кафе, ресторан">🍽 Кафе, ресторан</option>
-      <option value="🏠 Квартира, коммуналка">🏠 Квартира, коммуналка</option>
-      <option value="📦 Другое">📦 Другое</option>
-    </select>
-    <input type="text" id="comment" placeholder="Комментарий" required>
-    <button type="submit">Добавить транзакцию</button>
-  </form>
+            blocks.forEach(block => {
+                const lines = block.trim().split('\n').filter(l => l.trim());
+                if (lines.length === 0) return;
 
-  <script>
-    // Массив для хранения транзакций
-    let transactions = [];
+                const typeLine = lines[0].trim();
+                let type = 'unknown';
+                if (typeLine.includes('💸')) type = 'savings';
+                else if (typeLine.includes('🟢')) type = 'income';
+                else if (typeLine.includes('🔴')) type = 'expense';
+                
+                if (type === 'unknown') return; // Пропускаем заголовки типа "Доходы - расходы"
 
-    // Функция для отображения транзакций
-    function addTransaction(transaction) {
-      const transactionContainer = document.getElementById("transactionsContainer");
+                // Объединяем все строки после заголовка в одну
+                const rawContent = lines.slice(1).join(' ').replace(/\s+/g, ' ');
+                const dateMatch = rawContent.match(/(\d{2}-\d{2}-\d{4},?\s*\d{2}:\d{2})/);
+                const date = dateMatch ? dateMatch[1].replace(/\s*,\s*/g, ', ') : '—';
 
-      const transactionElement = document.createElement('div');
-      transactionElement.classList.add('transaction');
-      transactionElement.classList.add(transaction.type);
+                // Разбиваем по |
+                const segments = rawContent.split('|').map(s => s.trim()).filter(s => s);
+                const dataSegments = dateMatch ? segments.filter(s => s !== dateMatch[1]) : segments;
 
-      transactionElement.innerHTML = `
-        <h2>${transaction.type === 'income' ? '🟢 ДОХОД' : '🔴 РАСХОД'}</h2>
-        <p class="info">
-          <span class="date">${transaction.date}</span> | <span class="amount">${transaction.amount} ₽</span><br>
-          <span class="category">${transaction.category}</span> | <span class="comment">${transaction.comment}</span>
-        </p>
-      `;
-      transactionContainer.appendChild(transactionElement);
-    }
+                let amount = 0, category = '', comment = '';
 
-    // Обновление статистики
-    function updateStats() {
-      let totalIncome = 0;
-      let totalExpenses = 0;
-      transactions.forEach(transaction => {
-        if (transaction.type === 'income') totalIncome += transaction.amount;
-        if (transaction.type === 'expense') totalExpenses += transaction.amount;
-      });
-      document.getElementById('todayIncome').textContent = totalIncome;
-      document.getElementById('todayExpenses').textContent = totalExpenses;
-      document.getElementById('todayTotal').textContent = totalIncome - totalExpenses;
-    }
+                dataSegments.forEach(seg => {
+                    const numMatch = seg.match(/(\d+(?:\.\d+)?)/);
+                    // Ищем число, если оно ещё не найдено
+                    if (numMatch && amount === 0) {
+                        amount = parseFloat(numMatch[1]);
+                        const extra = seg.replace(numMatch[0], '').replace(/[₽$€]/g, '').trim();
+                        if (extra) comment += ' ' + extra;
+                    } 
+                    // Ищем категорию (обычно содержит эмодзи)
+                    else if (/[\p{Emoji}]/u.test(seg) && !category) {
+                        category = seg;
+                    } 
+                    // Если категории нет, считаем текущий сегмент категорией
+                    else if (!category) {
+                        category = seg;
+                    } 
+                    // Всё остальное идёт в комментарий
+                    else {
+                        comment += ' ' + seg;
+                    }
+                });
 
-    // Обработчик отправки формы
-    document.getElementById("transactionForm").addEventListener("submit", function(event) {
-      event.preventDefault();
+                if (type === 'income') totalIncome += amount;
+                if (type === 'expense') totalExpense += amount;
+                if (type === 'savings') totalSavings += amount;
 
-      const amount = parseFloat(document.getElementById("amount").value);
-      const category = document.getElementById("category").value;
-      const comment = document.getElementById("comment").value;
-      const date = new Date().toLocaleString(); // Текущая дата и время
+                entries.push({ type, date, amount, category: category.trim(), comment: comment.trim() });
+            });
 
-      // Создаём новую транзакцию
-      const transaction = {
-        type: amount >= 0 ? 'income' : 'expense',
-        date: date,
-        amount: Math.abs(amount),
-        category: category,
-        comment: comment
-      };
+            return { entries, totalIncome, totalExpense, totalSavings, balance: totalIncome - totalExpense };
+        }
 
-      // Добавляем транзакцию в массив
-      transactions.push(transaction);
+        function processData() {
+            const text = document.getElementById('rawInput').value;
+            if (!text.trim()) {
+                alert('⚠️ Вставьте текст из заметок в поле ввода!');
+                return;
+            }
 
-      // Добавляем транзакцию на страницу
-      addTransaction(transaction);
+            const { entries, totalIncome, totalExpense, totalSavings, balance } = parseFinanceData(text);
 
-      // Обновляем статистику
-      updateStats();
+            // Обновляем сводку
+            document.getElementById('sumIncome').textContent = totalIncome.toLocaleString('ru-RU') + ' ₽';
+            document.getElementById('sumExpense').textContent = totalExpense.toLocaleString('ru-RU') + ' ₽';
+            document.getElementById('sumBalance').textContent = balance.toLocaleString('ru-RU') + ' ₽';
+            document.getElementById('sumSavings').textContent = totalSavings.toLocaleString('ru-RU') + ' ₽';
 
-      // Очистить форму
-      document.getElementById("transactionForm").reset();
-    });
+            // Рендерим записи (сортировка: новые сверху)
+            const container = document.getElementById('entriesList');
+            container.innerHTML = '';
+            entries.sort((a, b) => b.date.localeCompare(a.date));
 
-    // Изначально добавляем несколько транзакций для демонстрации
-    transactions.push({ type: 'income', date: '12-04-2026, 17:39', amount: 5000, category: '💼 Подработка', comment: 'Без комментариев' });
-    transactions.push({ type: 'expense', date: '12-04-2026, 20:47', amount: 200, category: '🛒 Продукты', comment: 'Без комментариев' });
-    transactions.push({ type: 'income', date: '13-04-2026, 16:50', amount: 2000, category: '💼 Подработка', comment: 'Без комментариев' });
+            if (entries.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:#6b7280;">Не удалось найти записи. Проверьте формат текста.</p>';
+                return;
+            }
 
-    // Отображаем изначальные транзакции и обновляем статистику
-    transactions.forEach(transaction => addTransaction(transaction));
-    updateStats();
-  </script>
-
+            entries.forEach(e => {
+                const card = document.createElement('div');
+                card.className = `entry-card ${e.type}`;
+                card.innerHTML = `
+                    <div class="entry-header">
+                        <span class="badge ${e.type}">${e.type === 'income' ? '🟢 ДОХОД' : e.type === 'expense' ? '🔴 РАСХОД' : '💸 НАКОПЛЕНИЯ'}</span>
+                        <span class="date">${e.date}</span>
+                    </div>
+                    <div class="entry-body">
+                        <span class="amount">${e.amount.toLocaleString('ru-RU')} ₽</span>
+                        ${e.category ? `<span class="category">${e.category}</span>` : ''}
+                        ${e.comment ? `<span class="comment">💬 ${e.comment}</span>` : ''}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+    </script>
 </body>
 </html>
