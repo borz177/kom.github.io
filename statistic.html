@@ -10,8 +10,8 @@
             --income: #10b981; --income-bg: #d1fae5;
             --expense: #ef4444; --expense-bg: #fee2e2;
             --savings: #3b82f6; --savings-bg: #dbeafe;
-            --debt-in: #8b5cf6; --debt-in-bg: #ede9fe; /* Взять в долг */
-            --debt-out: #f59e0b; --debt-out-bg: #fef3c7; /* Дать в долг */
+            --debt-in: #8b5cf6; --debt-in-bg: #ede9fe;
+            --debt-out: #f59e0b; --debt-out-bg: #fef3c7;
             --primary: #3b82f6; --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -19,26 +19,36 @@
         .container { max-width: 800px; margin: 0 auto; }
         h1 { text-align: center; margin-bottom: 16px; font-size: 1.6rem; }
         
-        /* Кнопки фильтрации */
-        .filters { background: var(--card); padding: 12px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 20px; display: flex; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        .btn-filter { flex: 1; min-width: 80px; padding: 10px; background: #f3f4f6; color: var(--text); border: none; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
-        .btn-filter.active { background: var(--primary); color: white; }
+        /* Панель фильтров */
+        .filters-container { background: var(--card); padding: 12px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 20px; }
         
-        /* Сетка статистики теперь 3x2 или адаптивная */
+        /* Фильтры по времени */
+        .time-filters { display: flex; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 12px; padding-bottom: 4px; border-bottom: 1px solid #f3f4f6; }
+        .btn-time { flex: 1; min-width: 70px; padding: 8px; background: #f3f4f6; color: var(--text); border: none; border-radius: 6px; font-weight: 600; cursor: pointer; white-space: nowrap; font-size: 13px; }
+        .btn-time.active { background: var(--primary); color: white; }
+
+        /* Фильтры по типам */
+        .type-filters { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+        .btn-type { padding: 6px 12px; border: 2px solid #e5e7eb; background: white; color: var(--text2); border-radius: 20px; font-weight: 600; cursor: pointer; font-size: 12px; transition: all 0.2s; }
+        .btn-type.active { border-color: transparent; color: white; }
+        
+        /* Цвета кнопок типов */
+        .btn-type[data-type="income"].active { background: var(--income); }
+        .btn-type[data-type="expense"].active { background: var(--expense); }
+        .btn-type[data-type="savings"].active { background: var(--savings); }
+        .btn-type[data-type="debt-in"].active { background: var(--debt-in); }
+        .btn-type[data-type="debt-out"].active { background: var(--debt-out); }
+
         .summary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
         @media(min-width:600px) { .summary { grid-template-columns: repeat(3, 1fr); } }
         @media(min-width:900px) { .summary { grid-template-columns: repeat(6, 1fr); } }
         
-        .stat-card { background: var(--card); padding: 16px; border-radius: 12px; box-shadow: var(--shadow); text-align: center; }
-        .stat-card h3 { font-size: 11px; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .stat-card .value { font-size: 20px; font-weight: 800; }
-        
-        .val-income { color: var(--income); } 
-        .val-expense { color: var(--expense); } 
-        .val-balance { color: #4b5563; } 
-        .val-savings { color: var(--savings); }
-        .val-debt-in { color: var(--debt-in); }
-        .val-debt-out { color: var(--debt-out); }
+        .stat-card { background: var(--card); padding: 12px; border-radius: 12px; box-shadow: var(--shadow); text-align: center; }
+        .stat-card h3 { font-size: 10px; color: var(--text2); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-card .value { font-size: 18px; font-weight: 800; }
+        .val-income { color: var(--income); } .val-expense { color: var(--expense); } 
+        .val-balance { color: #4b5563; } .val-savings { color: var(--savings); }
+        .val-debt-in { color: var(--debt-in); } .val-debt-out { color: var(--debt-out); }
 
         .entries { display: flex; flex-direction: column; gap: 12px; }
         .entry-card { background: var(--card); padding: 14px 16px; border-radius: 12px; box-shadow: var(--shadow); border-left: 4px solid transparent; }
@@ -57,7 +67,6 @@
         .badge.debt-out { background: var(--debt-out-bg); color: #92400e; }
         
         .date { font-size: 13px; color: var(--text2); font-weight: 500; }
-        
         .entry-body { display: flex; flex-wrap: wrap; gap: 10px; align-items: baseline; }
         .amount { font-size: 18px; font-weight: 700; min-width: 80px; }
         .category { background: #f3f4f6; padding: 4px 10px; border-radius: 8px; font-size: 14px; }
@@ -71,12 +80,24 @@
     <div class="container">
         <h1>📊 Учет финансов</h1>
         
-        <!-- Кнопки фильтрации -->
-        <div class="filters">
-            <button class="btn-filter active" onclick="filterPeriod('all')">Все</button>
-            <button class="btn-filter" onclick="filterPeriod('today')">Сегодня</button>
-            <button class="btn-filter" onclick="filterPeriod('week')">Неделя</button>
-            <button class="btn-filter" onclick="filterPeriod('month')">Месяц</button>
+        <!-- Панель фильтров -->
+        <div class="filters-container">
+            <!-- Время -->
+            <div class="time-filters">
+                <button class="btn-time active" onclick="setTimeFilter('all')">Все</button>
+                <button class="btn-time" onclick="setTimeFilter('today')">Сегодня</button>
+                <button class="btn-time" onclick="setTimeFilter('week')">Неделя</button>
+                <button class="btn-time" onclick="setTimeFilter('month')">Месяц</button>
+            </div>
+            
+            <!-- Типы -->
+            <div class="type-filters">
+                <button class="btn-type active" data-type="income" onclick="toggleTypeFilter('income')">💵 Доходы</button>
+                <button class="btn-type active" data-type="expense" onclick="toggleTypeFilter('expense')">💸 Расходы</button>
+                <button class="btn-type active" data-type="savings" onclick="toggleTypeFilter('savings')">🏦 Накопления</button>
+                <button class="btn-type active" data-type="debt-in" onclick="toggleTypeFilter('debt-in')">⬇️ Долг (Взял)</button>
+                <button class="btn-type active" data-type="debt-out" onclick="toggleTypeFilter('debt-out')">⬆️ Долг (Дал)</button>
+            </div>
         </div>
 
         <div class="summary" id="summaryBlock">
@@ -84,8 +105,8 @@
             <div class="stat-card"><h3>💸 Расходы</h3><div class="value val-expense" id="sumExpense">0 ₽</div></div>
             <div class="stat-card"><h3>⚖️ Баланс</h3><div class="value val-balance" id="sumBalance">0 ₽</div></div>
             <div class="stat-card"><h3>🏦 Накопления</h3><div class="value val-savings" id="sumSavings">0 ₽</div></div>
-            <div class="stat-card"><h3>⬇️ Я должен</h3><div class="value val-debt-in" id="sumDebtIn">0 ₽</div></div>
-            <div class="stat-card"><h3>⬆️ Мне должны</h3><div class="value val-debt-out" id="sumDebtOut">0 ₽</div></div>
+            <div class="stat-card"><h3>⬇️ Взял в долг</h3><div class="value val-debt-in" id="sumDebtIn">0 ₽</div></div>
+            <div class="stat-card"><h3>⬆️ Дал в долг</h3><div class="value val-debt-out" id="sumDebtOut">0 ₽</div></div>
         </div>
 
         <div class="entries" id="entriesList"></div>
@@ -94,6 +115,9 @@
 
     <script>
         let ALL_ENTRIES = [];
+        // Состояние фильтров
+        let activeTypes = new Set(['income', 'expense', 'savings', 'debt-in', 'debt-out']);
+        let currentTimeFilter = 'all';
 
         function parseFinanceData(text) {
             if (text.trim().startsWith('{')) {
@@ -113,7 +137,6 @@
                 const typeLine = lines[0].trim();
                 let type = 'unknown';
                 
-                // Определение типа операции
                 if (typeLine.includes('💸')) type = 'savings';
                 else if (typeLine.includes('🟢') || typeLine.toLowerCase().includes('доход')) type = 'income';
                 else if (typeLine.includes('🔴') || typeLine.toLowerCase().includes('расход')) type = 'expense';
@@ -123,8 +146,6 @@
                 if (type === 'unknown') return;
 
                 const rawContent = lines.slice(1).join(' ');
-                
-                // Ищем дату
                 const dateMatch = rawContent.match(/(\d{2}-\d{2}-\d{4})/);
                 let dateStr = '—';
                 let dateObj = null;
@@ -136,12 +157,10 @@
                 }
 
                 const segments = rawContent.split('|').map(s => s.trim()).filter(s => s);
-                
                 let amount = 0;
                 let category = '';
                 let comment = '';
                 
-                // Пропускаем сегмент с временем, если он первый
                 let startIndex = 0;
                 if (segments.length > 0 && /\d{2}:\d{2}/.test(segments[0])) {
                     startIndex = 1;
@@ -149,8 +168,6 @@
 
                 for (let i = startIndex; i < segments.length; i++) {
                     const seg = segments[i];
-                    
-                    // Ищем сумму
                     if (amount === 0) {
                         const numMatch = seg.match(/^(\d+(?:\.\d+)?)\s*[₽$€]?$/);
                         if (numMatch) {
@@ -158,8 +175,6 @@
                             continue; 
                         }
                     }
-
-                    // Категория и комментарий
                     if (/[\p{Emoji}]/u.test(seg)) {
                         if (!category) category = seg;
                         else comment += ' ' + seg;
@@ -178,8 +193,55 @@
                     comment: comment.trim() 
                 });
             });
-
             return entries;
+        }
+
+        function applyFilters() {
+            const now = new Date();
+            const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            
+            let filtered = ALL_ENTRIES.filter(item => {
+                // 1. Фильтр по типу
+                if (!activeTypes.has(item.type)) return false;
+
+                // 2. Фильтр по времени
+                if (currentTimeFilter === 'all') return true;
+                if (!item.dateObj) return false;
+
+                if (currentTimeFilter === 'today') return item.dateObj >= todayStart;
+                if (currentTimeFilter === 'week') {
+                    const weekAgo = new Date(todayStart);
+                    weekAgo.setDate(weekAgo.getDate() - 7);
+                    return item.dateObj >= weekAgo;
+                }
+                if (currentTimeFilter === 'month') {
+                    const monthAgo = new Date(todayStart);
+                    monthAgo.setMonth(monthAgo.getMonth() - 1);
+                    return item.dateObj >= monthAgo;
+                }
+                return true;
+            });
+
+            renderDashboard(filtered);
+        }
+
+        function toggleTypeFilter(type) {
+            const btn = document.querySelector(`.btn-type[data-type="${type}"]`);
+            if (activeTypes.has(type)) {
+                activeTypes.delete(type);
+                btn.classList.remove('active');
+            } else {
+                activeTypes.add(type);
+                btn.classList.add('active');
+            }
+            applyFilters();
+        }
+
+        function setTimeFilter(period) {
+            currentTimeFilter = period;
+            document.querySelectorAll('.btn-time').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            applyFilters();
         }
 
         function renderDashboard(entries) {
@@ -190,7 +252,7 @@
             container.innerHTML = '';
             
             if (entries.length === 0) {
-                container.innerHTML = '<div class="empty-state">📭 Нет записей.</div>';
+                container.innerHTML = '<div class="empty-state">📭 Нет записей для выбранных фильтров.</div>';
                 updateSummary(0, 0, 0, 0, 0, 0);
                 return;
             }
@@ -232,11 +294,7 @@
                 container.appendChild(card);
             });
 
-            // Баланс считаем как: (Доходы + Взял в долг) - (Расходы + Дал в долг)
-            // Или просто Доходы - Расходы, если долги не считаем частью личного капитала.
-            // Обычно: Баланс = Доходы - Расходы. Долги отдельно.
             const balance = totalIncome - totalExpense; 
-
             updateSummary(totalIncome, totalExpense, balance, totalSavings, totalDebtIn, totalDebtOut);
         }
 
@@ -249,29 +307,6 @@
             document.getElementById('sumDebtOut').textContent = debtOut.toLocaleString('ru-RU') + ' ₽';
         }
 
-        function filterPeriod(period) {
-            document.querySelectorAll('.btn-filter').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-
-            const now = new Date();
-            const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            let filtered = [];
-
-            if (period === 'all') filtered = ALL_ENTRIES;
-            else if (period === 'today') filtered = ALL_ENTRIES.filter(item => item.dateObj && item.dateObj >= todayStart);
-            else if (period === 'week') {
-                const weekAgo = new Date(todayStart);
-                weekAgo.setDate(weekAgo.getDate() - 7);
-                filtered = ALL_ENTRIES.filter(item => item.dateObj && item.dateObj >= weekAgo);
-            } else if (period === 'month') {
-                const monthAgo = new Date(todayStart);
-                monthAgo.setMonth(monthAgo.getMonth() - 1);
-                filtered = ALL_ENTRIES.filter(item => item.dateObj && item.dateObj >= monthAgo);
-            }
-
-            renderDashboard(filtered);
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const encodedData = urlParams.get('data');
@@ -280,7 +315,7 @@
                 try {
                     const decodedData = decodeURIComponent(encodedData);
                     ALL_ENTRIES = parseFinanceData(decodedData);
-                    renderDashboard(ALL_ENTRIES);
+                    applyFilters(); // Применяем фильтры при загрузке
                 } catch (e) {
                     console.error(e);
                     document.getElementById('entriesList').innerHTML = '<div class="empty-state">❌ Ошибка данных.</div>';
