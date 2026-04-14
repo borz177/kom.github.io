@@ -12,6 +12,7 @@
             --savings: #3b82f6; --savings-bg: #dbeafe;
             --debt-in: #8b5cf6; --debt-in-bg: #ede9fe;
             --debt-out: #f59e0b; --debt-out-bg: #fef3c7;
+            --paid: #9ca3af; --paid-bg: #f3f4f6; /* Цвет для возвратов */
             --primary: #3b82f6; --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -19,25 +20,20 @@
         .container { max-width: 800px; margin: 0 auto; }
         h1 { text-align: center; margin-bottom: 16px; font-size: 1.6rem; }
         
-        /* Панель фильтров */
         .filters-container { background: var(--card); padding: 12px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 20px; }
-        
-        /* Фильтры по времени */
-        .time-filters { display: flex; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 12px; padding-bottom: 4px; border-bottom: 1px solid #f3f4f6; }
+        .time-filters { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 4px; border-bottom: 1px solid #f3f4f6; }
         .btn-time { flex: 1; min-width: 70px; padding: 8px; background: #f3f4f6; color: var(--text); border: none; border-radius: 6px; font-weight: 600; cursor: pointer; white-space: nowrap; font-size: 13px; }
         .btn-time.active { background: var(--primary); color: white; }
 
-        /* Фильтры по типам */
         .type-filters { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
         .btn-type { padding: 6px 12px; border: 2px solid #e5e7eb; background: white; color: var(--text2); border-radius: 20px; font-weight: 600; cursor: pointer; font-size: 12px; transition: all 0.2s; }
         .btn-type.active { border-color: transparent; color: white; }
-        
-        /* Цвета кнопок типов */
         .btn-type[data-type="income"].active { background: var(--income); }
         .btn-type[data-type="expense"].active { background: var(--expense); }
         .btn-type[data-type="savings"].active { background: var(--savings); }
         .btn-type[data-type="debt-in"].active { background: var(--debt-in); }
         .btn-type[data-type="debt-out"].active { background: var(--debt-out); }
+        .btn-type[data-type="paid"].active { background: var(--paid); } /* Кнопка фильтров для возвратов */
 
         .summary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
         @media(min-width:600px) { .summary { grid-template-columns: repeat(3, 1fr); } }
@@ -57,6 +53,7 @@
         .entry-card.savings { border-left-color: var(--savings); }
         .entry-card.debt-in { border-left-color: var(--debt-in); }
         .entry-card.debt-out { border-left-color: var(--debt-out); }
+        .entry-card.paid { border-left-color: var(--paid); opacity: 0.7; } /* Стиль для возвратов */
         
         .entry-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
@@ -65,6 +62,7 @@
         .badge.savings { background: var(--savings-bg); color: #1e40af; }
         .badge.debt-in { background: var(--debt-in-bg); color: #5b21b6; }
         .badge.debt-out { background: var(--debt-out-bg); color: #92400e; }
+        .badge.paid { background: var(--paid-bg); color: #4b5563; }
         
         .date { font-size: 13px; color: var(--text2); font-weight: 500; }
         .entry-body { display: flex; flex-wrap: wrap; gap: 10px; align-items: baseline; }
@@ -80,23 +78,20 @@
     <div class="container">
         <h1>📊 Учет финансов</h1>
         
-        <!-- Панель фильтров -->
         <div class="filters-container">
-            <!-- Время -->
             <div class="time-filters">
                 <button class="btn-time active" onclick="setTimeFilter('all')">Все</button>
                 <button class="btn-time" onclick="setTimeFilter('today')">Сегодня</button>
                 <button class="btn-time" onclick="setTimeFilter('week')">Неделя</button>
                 <button class="btn-time" onclick="setTimeFilter('month')">Месяц</button>
             </div>
-            
-            <!-- Типы -->
             <div class="type-filters">
                 <button class="btn-type active" data-type="income" onclick="toggleTypeFilter('income')">💵 Доходы</button>
                 <button class="btn-type active" data-type="expense" onclick="toggleTypeFilter('expense')">💸 Расходы</button>
                 <button class="btn-type active" data-type="savings" onclick="toggleTypeFilter('savings')">🏦 Накопления</button>
                 <button class="btn-type active" data-type="debt-in" onclick="toggleTypeFilter('debt-in')">⬇️ Долг (Взял)</button>
                 <button class="btn-type active" data-type="debt-out" onclick="toggleTypeFilter('debt-out')">⬆️ Долг (Дал)</button>
+                <button class="btn-type active" data-type="paid" onclick="toggleTypeFilter('paid')">✅ Возвраты</button>
             </div>
         </div>
 
@@ -115,8 +110,7 @@
 
     <script>
         let ALL_ENTRIES = [];
-        // Состояние фильтров
-        let activeTypes = new Set(['income', 'expense', 'savings', 'debt-in', 'debt-out']);
+        let activeTypes = new Set(['income', 'expense', 'savings', 'debt-in', 'debt-out', 'paid']);
         let currentTimeFilter = 'all';
 
         function parseFinanceData(text) {
@@ -136,6 +130,7 @@
 
                 const typeLine = lines[0].trim();
                 let type = 'unknown';
+                let isPaidReturn = false; // Флаг возврата долга
                 
                 if (typeLine.includes('💸')) type = 'savings';
                 else if (typeLine.includes('🟢') || typeLine.toLowerCase().includes('доход')) type = 'income';
@@ -146,6 +141,12 @@
                 if (type === 'unknown') return;
 
                 const rawContent = lines.slice(1).join(' ');
+                
+                // Проверка на хештег возврата долга в любой части записи
+                if (rawContent.toLowerCase().includes('#возврат') || rawContent.toLowerCase().includes('#return') || rawContent.toLowerCase().includes('#долг')) {
+                    isPaidReturn = true;
+                }
+
                 const dateMatch = rawContent.match(/(\d{2}-\d{2}-\d{4})/);
                 let dateStr = '—';
                 let dateObj = null;
@@ -184,8 +185,12 @@
                     }
                 }
 
+                // Если это возврат долга, меняем тип на 'paid'
+                let finalType = isPaidReturn ? 'paid' : type;
+
                 entries.push({ 
-                    type, 
+                    type: finalType, 
+                    originalType: type, // Сохраняем исходный тип для логики
                     date: dateStr, 
                     dateObj: dateObj, 
                     amount, 
@@ -201,10 +206,8 @@
             const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
             
             let filtered = ALL_ENTRIES.filter(item => {
-                // 1. Фильтр по типу
                 if (!activeTypes.has(item.type)) return false;
 
-                // 2. Фильтр по времени
                 if (currentTimeFilter === 'all') return true;
                 if (!item.dateObj) return false;
 
@@ -252,7 +255,7 @@
             container.innerHTML = '';
             
             if (entries.length === 0) {
-                container.innerHTML = '<div class="empty-state">📭 Нет записей для выбранных фильтров.</div>';
+                container.innerHTML = '<div class="empty-state">📭 Нет записей.</div>';
                 updateSummary(0, 0, 0, 0, 0, 0);
                 return;
             }
@@ -264,17 +267,35 @@
             });
 
             entries.forEach(e => {
-                if (e.type === 'income') totalIncome += e.amount;
-                if (e.type === 'expense') totalExpense += e.amount;
-                if (e.type === 'savings') totalSavings += e.amount;
-                if (e.type === 'debt-in') totalDebtIn += e.amount;
-                if (e.type === 'debt-out') totalDebtOut += e.amount;
+                // Логика подсчета:
+                // Если это возврат долга (paid), мы НЕ добавляем его в доходы/расходы.
+                // Вместо этого мы ВЫЧИТАЕМ его из соответствующего долга.
+                
+                if (e.type === 'paid') {
+                    // Определяем, какой долг гасится, по исходному типу
+                    if (e.originalType === 'income') {
+                        // Это был "Доход" с хештегом #возврат -> значит, нам вернули долг (гасим "Взял в долг")
+                        totalDebtIn -= e.amount; 
+                    } else if (e.originalType === 'expense') {
+                        // Это был "Расход" с хештегом #возврат -> значит, мы вернули долг (гасим "Дал в долг")
+                        totalDebtOut -= e.amount;
+                    }
+                } else {
+                    // Обычная логика
+                    if (e.type === 'income') totalIncome += e.amount;
+                    if (e.type === 'expense') totalExpense += e.amount;
+                    if (e.type === 'savings') totalSavings += e.amount;
+                    if (e.type === 'debt-in') totalDebtIn += e.amount;
+                    if (e.type === 'debt-out') totalDebtOut += e.amount;
+                }
 
                 const card = document.createElement('div');
                 card.className = `entry-card ${e.type}`;
                 
                 let badgeText = '';
-                if (e.type === 'income') badgeText = '🟢 Доход';
+                if (e.type === 'paid') {
+                    badgeText = '✅ Возврат долга';
+                } else if (e.type === 'income') badgeText = '🟢 Доход';
                 else if (e.type === 'expense') badgeText = '🔴 Расход';
                 else if (e.type === 'savings') badgeText = '💸 Накопления';
                 else if (e.type === 'debt-in') badgeText = '⬇️ Взял в долг';
@@ -287,14 +308,16 @@
                     </div>
                     <div class="entry-body">
                         <span class="amount">${e.amount.toLocaleString('ru-RU')} ₽</span>
-                        ${e.category ? `<span class="category">${e.category}</span>` : ''}
+                        ${e.category ? `<span class="category">${e.category.replace(/#возврат|#return|#долг/gi, '').trim()}</span>` : ''}
                         ${e.comment ? `<span class="comment">💬 ${e.comment}</span>` : ''}
                     </div>
                 `;
                 container.appendChild(card);
             });
 
+            // Баланс считаем без учета долгов (как личные деньги)
             const balance = totalIncome - totalExpense; 
+
             updateSummary(totalIncome, totalExpense, balance, totalSavings, totalDebtIn, totalDebtOut);
         }
 
@@ -315,7 +338,7 @@
                 try {
                     const decodedData = decodeURIComponent(encodedData);
                     ALL_ENTRIES = parseFinanceData(decodedData);
-                    applyFilters(); // Применяем фильтры при загрузке
+                    applyFilters();
                 } catch (e) {
                     console.error(e);
                     document.getElementById('entriesList').innerHTML = '<div class="empty-state">❌ Ошибка данных.</div>';
