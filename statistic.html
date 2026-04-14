@@ -10,6 +10,8 @@
             --income: #10b981; --income-bg: #d1fae5;
             --expense: #ef4444; --expense-bg: #fee2e2;
             --savings: #3b82f6; --savings-bg: #dbeafe;
+            --debt-in: #8b5cf6; --debt-in-bg: #ede9fe; /* Взять в долг */
+            --debt-out: #f59e0b; --debt-out-bg: #fef3c7; /* Дать в долг */
             --primary: #3b82f6; --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -22,25 +24,38 @@
         .btn-filter { flex: 1; min-width: 80px; padding: 10px; background: #f3f4f6; color: var(--text); border: none; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
         .btn-filter.active { background: var(--primary); color: white; }
         
+        /* Сетка статистики теперь 3x2 или адаптивная */
         .summary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
-        @media(min-width:600px) { .summary { grid-template-columns: repeat(4, 1fr); } }
+        @media(min-width:600px) { .summary { grid-template-columns: repeat(3, 1fr); } }
+        @media(min-width:900px) { .summary { grid-template-columns: repeat(6, 1fr); } }
+        
         .stat-card { background: var(--card); padding: 16px; border-radius: 12px; box-shadow: var(--shadow); text-align: center; }
-        .stat-card h3 { font-size: 12px; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .stat-card .value { font-size: 22px; font-weight: 800; }
-        .val-income { color: var(--income); } .val-expense { color: var(--expense); }
-        .val-balance { color: #8b5cf6; } .val-savings { color: var(--savings); }
+        .stat-card h3 { font-size: 11px; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-card .value { font-size: 20px; font-weight: 800; }
+        
+        .val-income { color: var(--income); } 
+        .val-expense { color: var(--expense); } 
+        .val-balance { color: #4b5563; } 
+        .val-savings { color: var(--savings); }
+        .val-debt-in { color: var(--debt-in); }
+        .val-debt-out { color: var(--debt-out); }
 
         .entries { display: flex; flex-direction: column; gap: 12px; }
         .entry-card { background: var(--card); padding: 14px 16px; border-radius: 12px; box-shadow: var(--shadow); border-left: 4px solid transparent; }
         .entry-card.income { border-left-color: var(--income); }
         .entry-card.expense { border-left-color: var(--expense); }
         .entry-card.savings { border-left-color: var(--savings); }
+        .entry-card.debt-in { border-left-color: var(--debt-in); }
+        .entry-card.debt-out { border-left-color: var(--debt-out); }
         
         .entry-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
         .badge.income { background: var(--income-bg); color: #065f46; }
         .badge.expense { background: var(--expense-bg); color: #991b1b; }
         .badge.savings { background: var(--savings-bg); color: #1e40af; }
+        .badge.debt-in { background: var(--debt-in-bg); color: #5b21b6; }
+        .badge.debt-out { background: var(--debt-out-bg); color: #92400e; }
+        
         .date { font-size: 13px; color: var(--text2); font-weight: 500; }
         
         .entry-body { display: flex; flex-wrap: wrap; gap: 10px; align-items: baseline; }
@@ -69,6 +84,8 @@
             <div class="stat-card"><h3>💸 Расходы</h3><div class="value val-expense" id="sumExpense">0 ₽</div></div>
             <div class="stat-card"><h3>⚖️ Баланс</h3><div class="value val-balance" id="sumBalance">0 ₽</div></div>
             <div class="stat-card"><h3>🏦 Накопления</h3><div class="value val-savings" id="sumSavings">0 ₽</div></div>
+            <div class="stat-card"><h3>⬇️ Взял в долг</h3><div class="value val-debt-in" id="sumDebtIn">0 ₽</div></div>
+            <div class="stat-card"><h3>⬆️ Дал в долг</h3><div class="value val-debt-out" id="sumDebtOut">0 ₽</div></div>
         </div>
 
         <div class="entries" id="entriesList"></div>
@@ -95,16 +112,19 @@
 
                 const typeLine = lines[0].trim();
                 let type = 'unknown';
+                
+                // Определение типа операции
                 if (typeLine.includes('💸')) type = 'savings';
                 else if (typeLine.includes('🟢') || typeLine.toLowerCase().includes('доход')) type = 'income';
                 else if (typeLine.includes('🔴') || typeLine.toLowerCase().includes('расход')) type = 'expense';
+                else if (typeLine.includes('⬇️') || typeLine.toLowerCase().includes('взять в долг')) type = 'debt-in';
+                else if (typeLine.includes('⬆️') || typeLine.toLowerCase().includes('дать в долг')) type = 'debt-out';
                 
                 if (type === 'unknown') return;
 
-                // Объединяем содержимое блока
                 const rawContent = lines.slice(1).join(' ');
                 
-                // 1. Ищем дату (ДД-ММ-ГГГГ)
+                // Ищем дату
                 const dateMatch = rawContent.match(/(\d{2}-\d{2}-\d{4})/);
                 let dateStr = '—';
                 let dateObj = null;
@@ -115,14 +135,13 @@
                     dateObj = new Date(parts[2], parts[1] - 1, parts[0]);
                 }
 
-                // Разбиваем по |
                 const segments = rawContent.split('|').map(s => s.trim()).filter(s => s);
                 
                 let amount = 0;
                 let category = '';
                 let comment = '';
                 
-                // Пропускаем первый сегмент, если там только дата и время
+                // Пропускаем сегмент с временем, если он первый
                 let startIndex = 0;
                 if (segments.length > 0 && /\d{2}:\d{2}/.test(segments[0])) {
                     startIndex = 1;
@@ -131,17 +150,16 @@
                 for (let i = startIndex; i < segments.length; i++) {
                     const seg = segments[i];
                     
-                    // Ищем сумму: число, за которым может идти ₽, $ или пробел
-                    // Важно: сумма обычно идет первой после даты
+                    // Ищем сумму
                     if (amount === 0) {
                         const numMatch = seg.match(/^(\d+(?:\.\d+)?)\s*[₽$€]?$/);
                         if (numMatch) {
                             amount = parseFloat(numMatch[1]);
-                            continue; // Переходим к следующему сегменту
+                            continue; 
                         }
                     }
 
-                    // Если сумма уже найдена, определяем категорию и комментарий
+                    // Категория и комментарий
                     if (/[\p{Emoji}]/u.test(seg)) {
                         if (!category) category = seg;
                         else comment += ' ' + seg;
@@ -166,12 +184,14 @@
 
         function renderDashboard(entries) {
             let totalIncome = 0, totalExpense = 0, totalSavings = 0;
+            let totalDebtIn = 0, totalDebtOut = 0;
+
             const container = document.getElementById('entriesList');
             container.innerHTML = '';
             
             if (entries.length === 0) {
                 container.innerHTML = '<div class="empty-state">📭 Нет записей.</div>';
-                updateSummary(0, 0, 0, 0);
+                updateSummary(0, 0, 0, 0, 0, 0);
                 return;
             }
 
@@ -185,12 +205,22 @@
                 if (e.type === 'income') totalIncome += e.amount;
                 if (e.type === 'expense') totalExpense += e.amount;
                 if (e.type === 'savings') totalSavings += e.amount;
+                if (e.type === 'debt-in') totalDebtIn += e.amount;
+                if (e.type === 'debt-out') totalDebtOut += e.amount;
 
                 const card = document.createElement('div');
                 card.className = `entry-card ${e.type}`;
+                
+                let badgeText = '';
+                if (e.type === 'income') badgeText = '🟢 Доход';
+                else if (e.type === 'expense') badgeText = '🔴 Расход';
+                else if (e.type === 'savings') badgeText = '💸 Накопления';
+                else if (e.type === 'debt-in') badgeText = '⬇️ Взял в долг';
+                else if (e.type === 'debt-out') badgeText = '⬆️ Дал в долг';
+
                 card.innerHTML = `
                     <div class="entry-header">
-                        <span class="badge ${e.type}">${e.type === 'income' ? '🟢 Доход' : e.type === 'expense' ? '🔴 Расход' : '💸 Накопления'}</span>
+                        <span class="badge ${e.type}">${badgeText}</span>
                         <span class="date">${e.date}</span>
                     </div>
                     <div class="entry-body">
@@ -202,31 +232,34 @@
                 container.appendChild(card);
             });
 
-            updateSummary(totalIncome, totalExpense, totalSavings, totalIncome - totalExpense);
+            // Баланс считаем как: (Доходы + Взял в долг) - (Расходы + Дал в долг)
+            // Или просто Доходы - Расходы, если долги не считаем частью личного капитала.
+            // Обычно: Баланс = Доходы - Расходы. Долги отдельно.
+            const balance = totalIncome - totalExpense; 
+
+            updateSummary(totalIncome, totalExpense, balance, totalSavings, totalDebtIn, totalDebtOut);
         }
 
-        function updateSummary(income, expense, savings, balance) {
+        function updateSummary(income, expense, balance, savings, debtIn, debtOut) {
             document.getElementById('sumIncome').textContent = income.toLocaleString('ru-RU') + ' ₽';
             document.getElementById('sumExpense').textContent = expense.toLocaleString('ru-RU') + ' ₽';
             document.getElementById('sumBalance').textContent = balance.toLocaleString('ru-RU') + ' ₽';
             document.getElementById('sumSavings').textContent = savings.toLocaleString('ru-RU') + ' ₽';
+            document.getElementById('sumDebtIn').textContent = debtIn.toLocaleString('ru-RU') + ' ₽';
+            document.getElementById('sumDebtOut').textContent = debtOut.toLocaleString('ru-RU') + ' ₽';
         }
 
         function filterPeriod(period) {
-            // Обновляем активную кнопку
             document.querySelectorAll('.btn-filter').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
 
             const now = new Date();
             const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            
             let filtered = [];
 
-            if (period === 'all') {
-                filtered = ALL_ENTRIES;
-            } else if (period === 'today') {
-                filtered = ALL_ENTRIES.filter(item => item.dateObj && item.dateObj >= todayStart);
-            } else if (period === 'week') {
+            if (period === 'all') filtered = ALL_ENTRIES;
+            else if (period === 'today') filtered = ALL_ENTRIES.filter(item => item.dateObj && item.dateObj >= todayStart);
+            else if (period === 'week') {
                 const weekAgo = new Date(todayStart);
                 weekAgo.setDate(weekAgo.getDate() - 7);
                 filtered = ALL_ENTRIES.filter(item => item.dateObj && item.dateObj >= weekAgo);
@@ -257,3 +290,4 @@
     </script>
 </body>
 </html>
+
