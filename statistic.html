@@ -10,9 +10,9 @@
             --income: #10b981; --income-bg: #d1fae5;
             --expense: #ef4444; --expense-bg: #fee2e2;
             --savings: #3b82f6; --savings-bg: #dbeafe;
-            --debt-in: #8b5cf6; --debt-in-bg: #ede9fe;
-            --debt-out: #f59e0b; --debt-out-bg: #fef3c7;
-            --paid: #9ca3af; --paid-bg: #f3f4f6; /* Цвет для возвратов */
+            --debt-active: #f59e0b; --debt-active-bg: #fef3c7; /* Мне должны */
+            --debt-passive: #8b5cf6; --debt-passive-bg: #ede9fe; /* Я должен */
+            --paid: #9ca3af; --paid-bg: #f3f4f6; /* Погашение */
             --primary: #3b82f6; --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -31,37 +31,36 @@
         .btn-type[data-type="income"].active { background: var(--income); }
         .btn-type[data-type="expense"].active { background: var(--expense); }
         .btn-type[data-type="savings"].active { background: var(--savings); }
-        .btn-type[data-type="debt-in"].active { background: var(--debt-in); }
-        .btn-type[data-type="debt-out"].active { background: var(--debt-out); }
-        .btn-type[data-type="paid"].active { background: var(--paid); } /* Кнопка фильтров для возвратов */
+        .btn-type[data-type="debt"].active { background: var(--debt-active); }
 
         .summary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
         @media(min-width:600px) { .summary { grid-template-columns: repeat(3, 1fr); } }
-        @media(min-width:900px) { .summary { grid-template-columns: repeat(6, 1fr); } }
+        @media(min-width:900px) { .summary { grid-template-columns: repeat(4, 1fr); } }
         
         .stat-card { background: var(--card); padding: 12px; border-radius: 12px; box-shadow: var(--shadow); text-align: center; }
         .stat-card h3 { font-size: 10px; color: var(--text2); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
         .stat-card .value { font-size: 18px; font-weight: 800; }
         .val-income { color: var(--income); } .val-expense { color: var(--expense); } 
         .val-balance { color: #4b5563; } .val-savings { color: var(--savings); }
-        .val-debt-in { color: var(--debt-in); } .val-debt-out { color: var(--debt-out); }
+        .val-debt-active { color: var(--debt-active); }
+        .val-debt-passive { color: var(--debt-passive); }
 
         .entries { display: flex; flex-direction: column; gap: 12px; }
         .entry-card { background: var(--card); padding: 14px 16px; border-radius: 12px; box-shadow: var(--shadow); border-left: 4px solid transparent; }
         .entry-card.income { border-left-color: var(--income); }
         .entry-card.expense { border-left-color: var(--expense); }
         .entry-card.savings { border-left-color: var(--savings); }
-        .entry-card.debt-in { border-left-color: var(--debt-in); }
-        .entry-card.debt-out { border-left-color: var(--debt-out); }
-        .entry-card.paid { border-left-color: var(--paid); opacity: 0.7; } /* Стиль для возвратов */
+        .entry-card.debt-active { border-left-color: var(--debt-active); } 
+        .entry-card.debt-passive { border-left-color: var(--debt-passive); }
+        .entry-card.paid { border-left-color: var(--paid); opacity: 0.7; }
         
         .entry-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
         .badge.income { background: var(--income-bg); color: #065f46; }
         .badge.expense { background: var(--expense-bg); color: #991b1b; }
         .badge.savings { background: var(--savings-bg); color: #1e40af; }
-        .badge.debt-in { background: var(--debt-in-bg); color: #5b21b6; }
-        .badge.debt-out { background: var(--debt-out-bg); color: #92400e; }
+        .badge.debt-active { background: var(--debt-active-bg); color: #92400e; }
+        .badge.debt-passive { background: var(--debt-passive-bg); color: #5b21b6; }
         .badge.paid { background: var(--paid-bg); color: #4b5563; }
         
         .date { font-size: 13px; color: var(--text2); font-weight: 500; }
@@ -89,9 +88,7 @@
                 <button class="btn-type active" data-type="income" onclick="toggleTypeFilter('income')">💵 Доходы</button>
                 <button class="btn-type active" data-type="expense" onclick="toggleTypeFilter('expense')">💸 Расходы</button>
                 <button class="btn-type active" data-type="savings" onclick="toggleTypeFilter('savings')">🏦 Накопления</button>
-                <button class="btn-type active" data-type="debt-in" onclick="toggleTypeFilter('debt-in')">⬇️ Долг (Взял)</button>
-                <button class="btn-type active" data-type="debt-out" onclick="toggleTypeFilter('debt-out')">⬆️ Долг (Дал)</button>
-                <button class="btn-type active" data-type="paid" onclick="toggleTypeFilter('paid')">✅ Возвраты</button>
+                <button class="btn-type active" data-type="debt" onclick="toggleTypeFilter('debt')">⚖️ Долги</button>
             </div>
         </div>
 
@@ -100,8 +97,8 @@
             <div class="stat-card"><h3>💸 Расходы</h3><div class="value val-expense" id="sumExpense">0 ₽</div></div>
             <div class="stat-card"><h3>⚖️ Баланс</h3><div class="value val-balance" id="sumBalance">0 ₽</div></div>
             <div class="stat-card"><h3>🏦 Накопления</h3><div class="value val-savings" id="sumSavings">0 ₽</div></div>
-            <div class="stat-card"><h3>⬇️ Взял в долг</h3><div class="value val-debt-in" id="sumDebtIn">0 ₽</div></div>
-            <div class="stat-card"><h3>⬆️ Дал в долг</h3><div class="value val-debt-out" id="sumDebtOut">0 ₽</div></div>
+            <div class="stat-card"><h3>🤝 Мне должны</h3><div class="value val-debt-active" id="sumDebtActive">0 ₽</div></div>
+            <div class="stat-card"><h3>🙏 Я должен</h3><div class="value val-debt-passive" id="sumDebtPassive">0 ₽</div></div>
         </div>
 
         <div class="entries" id="entriesList"></div>
@@ -110,7 +107,7 @@
 
     <script>
         let ALL_ENTRIES = [];
-        let activeTypes = new Set(['income', 'expense', 'savings', 'debt-in', 'debt-out', 'paid']);
+        let activeTypes = new Set(['income', 'expense', 'savings', 'debt']);
         let currentTimeFilter = 'all';
 
         function parseFinanceData(text) {
@@ -129,22 +126,45 @@
                 if (lines.length < 2) return;
 
                 const typeLine = lines[0].trim();
-                let type = 'unknown';
-                let isPaidReturn = false; // Флаг возврата долга
+                let baseType = 'unknown';
                 
-                if (typeLine.includes('💸')) type = 'savings';
-                else if (typeLine.includes('🟢') || typeLine.toLowerCase().includes('доход')) type = 'income';
-                else if (typeLine.includes('🔴') || typeLine.toLowerCase().includes('расход')) type = 'expense';
-                else if (typeLine.includes('⬇️') || typeLine.toLowerCase().includes('взять в долг')) type = 'debt-in';
-                else if (typeLine.includes('⬆️') || typeLine.toLowerCase().includes('дать в долг')) type = 'debt-out';
+                // Определение типа по заголовку
+                if (typeLine.includes('💸')) baseType = 'savings';
+                else if (typeLine.includes('🟢') || typeLine.toLowerCase().includes('доход')) baseType = 'income';
+                else if (typeLine.includes('🔴') || typeLine.toLowerCase().includes('расход')) baseType = 'expense';
+                else if (typeLine.includes('💰') || typeLine.toLowerCase().includes('долги')) baseType = 'debt-wrapper';
                 
-                if (type === 'unknown') return;
+                if (baseType === 'unknown') return;
 
                 const rawContent = lines.slice(1).join(' ');
                 
-                // Проверка на хештег возврата долга в любой части записи
-                if (rawContent.toLowerCase().includes('#возврат') || rawContent.toLowerCase().includes('#return') || rawContent.toLowerCase().includes('#долг')) {
-                    isPaidReturn = true;
+                // Логика для типа "Долги"
+                let finalType = baseType;
+                let debtDirection = null; // 'active' (мне должны), 'passive' (я должен), 'paid-active' (вернули мне), 'paid-passive' (я вернул)
+
+                if (baseType === 'debt-wrapper') {
+                    const catLower = rawContent.toLowerCase();
+                    if (catLower.includes('вернули мне') || catLower.includes('мне вернули')) {
+                        finalType = 'paid';
+                        debtDirection = 'paid-active';
+                    } else if (catLower.includes('я вернул') || catLower.includes('вернул долг')) {
+                        finalType = 'paid';
+                        debtDirection = 'paid-passive';
+                    } else if (catLower.includes('дал в долг') || catLower.includes('в долг')) {
+                        // Если ты используешь этот тип и для выдачи долгов
+                        finalType = 'debt-active';
+                        debtDirection = 'active';
+                    } else if (catLower.includes('взял в долг')) {
+                        finalType = 'debt-passive';
+                        debtDirection = 'passive';
+                    }
+                } 
+                // Логика для обычных типов, если там есть метки долга (на всякий случай)
+                else if (baseType === 'income' && rawContent.toLowerCase().includes('вернули')) {
+                     finalType = 'paid'; debtDirection = 'paid-active';
+                }
+                else if (baseType === 'expense' && rawContent.toLowerCase().includes('вернул')) {
+                     finalType = 'paid'; debtDirection = 'paid-passive';
                 }
 
                 const dateMatch = rawContent.match(/(\d{2}-\d{2}-\d{4})/);
@@ -176,6 +196,7 @@
                             continue; 
                         }
                     }
+                    
                     if (/[\p{Emoji}]/u.test(seg)) {
                         if (!category) category = seg;
                         else comment += ' ' + seg;
@@ -185,12 +206,9 @@
                     }
                 }
 
-                // Если это возврат долга, меняем тип на 'paid'
-                let finalType = isPaidReturn ? 'paid' : type;
-
                 entries.push({ 
                     type: finalType, 
-                    originalType: type, // Сохраняем исходный тип для логики
+                    debtDirection: debtDirection,
                     date: dateStr, 
                     dateObj: dateObj, 
                     amount, 
@@ -206,7 +224,10 @@
             const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
             
             let filtered = ALL_ENTRIES.filter(item => {
-                if (!activeTypes.has(item.type)) return false;
+                let filterType = item.type;
+                if (item.type === 'debt-active' || item.type === 'debt-passive' || item.type === 'paid') filterType = 'debt';
+                
+                if (!activeTypes.has(filterType) && !activeTypes.has(item.type)) return false;
 
                 if (currentTimeFilter === 'all') return true;
                 if (!item.dateObj) return false;
@@ -249,7 +270,8 @@
 
         function renderDashboard(entries) {
             let totalIncome = 0, totalExpense = 0, totalSavings = 0;
-            let totalDebtIn = 0, totalDebtOut = 0;
+            let totalDebtActive = 0; // Мне должны
+            let totalDebtPassive = 0; // Я должен
 
             const container = document.getElementById('entriesList');
             container.innerHTML = '';
@@ -267,39 +289,22 @@
             });
 
             entries.forEach(e => {
-                // Логика подсчета:
-                // Если это возврат долга (paid), мы НЕ добавляем его в доходы/расходы.
-                // Вместо этого мы ВЫЧИТАЕМ его из соответствующего долга.
+                if (e.type === 'income') totalIncome += e.amount;
+                if (e.type === 'expense') totalExpense += e.amount;
+                if (e.type === 'savings') totalSavings += e.amount;
                 
-                if (e.type === 'paid') {
-                    // Определяем, какой долг гасится, по исходному типу
-                    if (e.originalType === 'income') {
-                        // Это был "Доход" с хештегом #возврат -> значит, нам вернули долг (гасим "Взял в долг")
-                        totalDebtIn -= e.amount; 
-                    } else if (e.originalType === 'expense') {
-                        // Это был "Расход" с хештегом #возврат -> значит, мы вернули долг (гасим "Дал в долг")
-                        totalDebtOut -= e.amount;
-                    }
-                } else {
-                    // Обычная логика
-                    if (e.type === 'income') totalIncome += e.amount;
-                    if (e.type === 'expense') totalExpense += e.amount;
-                    if (e.type === 'savings') totalSavings += e.amount;
-                    if (e.type === 'debt-in') totalDebtIn += e.amount;
-                    if (e.type === 'debt-out') totalDebtOut += e.amount;
-                }
+                // Логика долгов
+                if (e.debtDirection === 'active') totalDebtActive += e.amount;
+                if (e.debtDirection === 'passive') totalDebtPassive += e.amount;
+                if (e.debtDirection === 'paid-active') totalDebtActive -= e.amount; // Вернули мне -> долг уменьшается
+                if (e.debtDirection === 'paid-passive') totalDebtPassive -= e.amount; // Я вернул -> мой долг уменьшается
 
                 const card = document.createElement('div');
                 card.className = `entry-card ${e.type}`;
                 
-                let badgeText = '';
-                if (e.type === 'paid') {
-                    badgeText = '✅ Возврат долга';
-                } else if (e.type === 'income') badgeText = '🟢 Доход';
-                else if (e.type === 'expense') badgeText = '🔴 Расход';
-                else if (e.type === 'savings') badgeText = '💸 Накопления';
-                else if (e.type === 'debt-in') badgeText = '⬇️ Взял в долг';
-                else if (e.type === 'debt-out') badgeText = '⬆️ Дал в долг';
+                let badgeText = e.category;
+                if (e.debtDirection === 'paid-active') badgeText = '✅ Вернули мне';
+                if (e.debtDirection === 'paid-passive') badgeText = '✅ Я вернул';
 
                 card.innerHTML = `
                     <div class="entry-header">
@@ -308,26 +313,23 @@
                     </div>
                     <div class="entry-body">
                         <span class="amount">${e.amount.toLocaleString('ru-RU')} ₽</span>
-                        ${e.category ? `<span class="category">${e.category.replace(/#возврат|#return|#долг/gi, '').trim()}</span>` : ''}
                         ${e.comment ? `<span class="comment">💬 ${e.comment}</span>` : ''}
                     </div>
                 `;
                 container.appendChild(card);
             });
 
-            // Баланс считаем без учета долгов (как личные деньги)
             const balance = totalIncome - totalExpense; 
-
-            updateSummary(totalIncome, totalExpense, balance, totalSavings, totalDebtIn, totalDebtOut);
+            updateSummary(totalIncome, totalExpense, balance, totalSavings, totalDebtActive, totalDebtPassive);
         }
 
-        function updateSummary(income, expense, balance, savings, debtIn, debtOut) {
+        function updateSummary(income, expense, balance, savings, debtActive, debtPassive) {
             document.getElementById('sumIncome').textContent = income.toLocaleString('ru-RU') + ' ₽';
             document.getElementById('sumExpense').textContent = expense.toLocaleString('ru-RU') + ' ₽';
             document.getElementById('sumBalance').textContent = balance.toLocaleString('ru-RU') + ' ₽';
             document.getElementById('sumSavings').textContent = savings.toLocaleString('ru-RU') + ' ₽';
-            document.getElementById('sumDebtIn').textContent = debtIn.toLocaleString('ru-RU') + ' ₽';
-            document.getElementById('sumDebtOut').textContent = debtOut.toLocaleString('ru-RU') + ' ₽';
+            document.getElementById('sumDebtActive').textContent = debtActive.toLocaleString('ru-RU') + ' ₽';
+            document.getElementById('sumDebtPassive').textContent = debtPassive.toLocaleString('ru-RU') + ' ₽';
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -348,4 +350,3 @@
     </script>
 </body>
 </html>
-
