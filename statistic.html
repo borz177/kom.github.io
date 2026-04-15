@@ -2,75 +2,172 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>📊 Финансы: Статистика</title>
     <style>
         :root {
-            --bg: #f4f6f9; --card: #ffffff; --text: #1f2937; --text2: #6b7280;
+            /* Светлая тема */
+            --bg: #f4f6f9;
+            --card: #ffffff;
+            --text: #1f2937;
+            --text2: #6b7280;
+            --border: #e5e7eb;
+            
             --income: #10b981; --income-bg: #d1fae5;
             --expense: #ef4444; --expense-bg: #fee2e2;
             --savings: #3b82f6; --savings-bg: #dbeafe;
-            --debt-active: #f59e0b; --debt-active-bg: #fef3c7; /* Мне должны (Активный) */
-            --debt-passive: #8b5cf6; --debt-passive-bg: #ede9fe; /* Я должен (Пассивный) */
+            --debt-active: #f59e0b; --debt-active-bg: #fef3c7;
+            --debt-passive: #8b5cf6; --debt-passive-bg: #ede9fe;
             --paid: #9ca3af; --paid-bg: #f3f4f6;
-            --primary: #3b82f6; --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --primary: #3b82f6;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; padding: 16px; }
-        .container { max-width: 800px; margin: 0 auto; }
-        h1 { text-align: center; margin-bottom: 16px; font-size: 1.6rem; }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                /* Темная тема */
+                --bg: #111827;
+                --card: #1f2937;
+                --text: #f9fafb;
+                --text2: #9ca3af;
+                --border: #374151;
+                
+                --income: #34d399; --income-bg: #064e3b;
+                --expense: #f87171; --expense-bg: #7f1d1d;
+                --savings: #60a5fa; --savings-bg: #1e3a8a;
+                --debt-active: #fbbf24; --debt-active-bg: #78350f;
+                --debt-passive: #a78bfa; --debt-passive-bg: #4c1d95;
+                --paid: #6b7280; --paid-bg: #374151;
+                --primary: #60a5fa;
+                --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.5);
+            }
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         
-        .filters-container { background: var(--card); padding: 12px; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 20px; }
-        .time-filters { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 4px; border-bottom: 1px solid #f3f4f6; }
-        .btn-time { flex: 1; min-width: 70px; padding: 8px; background: #f3f4f6; color: var(--text); border: none; border-radius: 6px; font-weight: 600; cursor: pointer; white-space: nowrap; font-size: 13px; }
-        .btn-time.active { background: var(--primary); color: white; }
+        body { 
+            font-family: system-ui, -apple-system, sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            line-height: 1.5; 
+            padding: 16px; 
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { text-align: center; margin-bottom: 20px; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.5px; }
+        
+        /* Фильтры */
+        .filters-container { 
+            background: var(--card); 
+            padding: 16px; 
+            border-radius: 16px; 
+            box-shadow: var(--shadow); 
+            margin-bottom: 24px; 
+            transition: background 0.3s;
+        }
+        .time-filters { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 4px; scrollbar-width: none; }
+        .time-filters::-webkit-scrollbar { display: none; }
+        .btn-time { 
+            flex: 1; min-width: 70px; padding: 10px; 
+            background: var(--bg); color: var(--text2); 
+            border: 1px solid var(--border); 
+            border-radius: 10px; font-weight: 600; cursor: pointer; 
+            white-space: nowrap; font-size: 13px; 
+            transition: all 0.2s ease;
+        }
+        .btn-time.active { background: var(--primary); color: white; border-color: var(--primary); transform: scale(1.05); }
 
         .type-filters { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-        .btn-type { padding: 6px 12px; border: 2px solid #e5e7eb; background: white; color: var(--text2); border-radius: 20px; font-weight: 600; cursor: pointer; font-size: 12px; transition: all 0.2s; }
-        .btn-type.active { border-color: transparent; color: white; }
+        .btn-type { 
+            padding: 8px 14px; 
+            border: 1px solid var(--border); 
+            background: var(--card); 
+            color: var(--text2); 
+            border-radius: 20px; font-weight: 600; cursor: pointer; font-size: 12px; 
+            transition: all 0.2s ease;
+        }
+        .btn-type.active { border-color: transparent; color: white; transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); }
         .btn-type[data-type="income"].active { background: var(--income); }
         .btn-type[data-type="expense"].active { background: var(--expense); }
         .btn-type[data-type="savings"].active { background: var(--savings); }
         .btn-type[data-type="debt"].active { background: var(--debt-active); }
 
-        .summary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+        /* Статистика */
+        .summary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
         @media(min-width:600px) { .summary { grid-template-columns: repeat(3, 1fr); } }
         @media(min-width:900px) { .summary { grid-template-columns: repeat(4, 1fr); } }
         
-        .stat-card { background: var(--card); padding: 12px; border-radius: 12px; box-shadow: var(--shadow); text-align: center; }
-        .stat-card h3 { font-size: 10px; color: var(--text2); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .stat-card .value { font-size: 18px; font-weight: 800; }
-        .val-income { color: var(--income); } .val-expense { color: var(--expense); } 
-        .val-balance { color: #4b5563; } .val-savings { color: var(--savings); }
+        .stat-card { 
+            background: var(--card); 
+            padding: 16px; 
+            border-radius: 16px; 
+            box-shadow: var(--shadow); 
+            text-align: center; 
+            transition: transform 0.2s, background 0.3s;
+            opacity: 0; /* Для анимации появления */
+            animation: fadeInUp 0.5s forwards;
+        }
+        .stat-card:hover { transform: translateY(-3px); }
+        .stat-card h3 { font-size: 11px; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+        .stat-card .value { font-size: 20px; font-weight: 800; transition: color 0.3s; }
+        
+        /* Цвета значений */
+        .val-income { color: var(--income); } 
+        .val-expense { color: var(--expense); } 
+        .val-balance { color: var(--text); } 
+        .val-balance.negative { color: var(--expense); } /* Красный если минус */
+        .val-savings { color: var(--savings); }
         .val-debt-active { color: var(--debt-active); }
         .val-debt-passive { color: var(--debt-passive); }
 
+        /* Список записей */
         .entries { display: flex; flex-direction: column; gap: 12px; }
-        .entry-card { background: var(--card); padding: 14px 16px; border-radius: 12px; box-shadow: var(--shadow); border-left: 4px solid transparent; }
+        .entry-card { 
+            background: var(--card); 
+            padding: 16px; 
+            border-radius: 16px; 
+            box-shadow: var(--shadow); 
+            border-left: 5px solid transparent; 
+            opacity: 0;
+            animation: slideIn 0.4s forwards;
+            transition: background 0.3s, transform 0.2s;
+        }
+        .entry-card:hover { transform: scale(1.01); }
         .entry-card.income { border-left-color: var(--income); }
         .entry-card.expense { border-left-color: var(--expense); }
         .entry-card.savings { border-left-color: var(--savings); }
         .entry-card.debt-active { border-left-color: var(--debt-active); } 
         .entry-card.debt-passive { border-left-color: var(--debt-passive); }
-        .entry-card.paid { border-left-color: var(--paid); opacity: 0.7; }
+        .entry-card.paid { border-left-color: var(--paid); opacity: 0.8; }
         
-        .entry-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
-        .badge.income { background: var(--income-bg); color: #065f46; }
-        .badge.expense { background: var(--expense-bg); color: #991b1b; }
-        .badge.savings { background: var(--savings-bg); color: #1e40af; }
-        .badge.debt-active { background: var(--debt-active-bg); color: #92400e; }
-        .badge.debt-passive { background: var(--debt-passive-bg); color: #5b21b6; }
-        .badge.paid { background: var(--paid-bg); color: #4b5563; }
+        .entry-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .badge { padding: 5px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge.income { background: var(--income-bg); color: var(--income); }
+        .badge.expense { background: var(--expense-bg); color: var(--expense); }
+        .badge.savings { background: var(--savings-bg); color: var(--savings); }
+        .badge.debt-active { background: var(--debt-active-bg); color: var(--debt-active); }
+        .badge.debt-passive { background: var(--debt-passive-bg); color: var(--debt-passive); }
+        .badge.paid { background: var(--paid-bg); color: var(--paid); }
         
         .date { font-size: 13px; color: var(--text2); font-weight: 500; }
-        .entry-body { display: flex; flex-wrap: wrap; gap: 10px; align-items: baseline; }
-        .amount { font-size: 18px; font-weight: 700; min-width: 80px; }
-        .category { background: #f3f4f6; padding: 4px 10px; border-radius: 8px; font-size: 14px; }
+        .entry-body { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; }
+        .amount { font-size: 19px; font-weight: 800; min-width: 80px; letter-spacing: -0.5px; }
+        .category { background: var(--bg); padding: 6px 12px; border-radius: 10px; font-size: 14px; color: var(--text); font-weight: 500; }
         .comment { font-size: 13px; color: var(--text2); font-style: italic; margin-left: auto; max-width: 40%; word-break: break-word; }
 
-        .footer { text-align: center; margin-top: 24px; padding: 12px; font-size: 12px; color: #9ca3af; }
-        .empty-state { text-align: center; padding: 30px; color: var(--text2); background: var(--card); border-radius: 12px; }
+        .footer { text-align: center; margin-top: 30px; padding: 12px; font-size: 12px; color: var(--text2); opacity: 0.7; }
+        .empty-state { text-align: center; padding: 40px; color: var(--text2); background: var(--card); border-radius: 16px; box-shadow: var(--shadow); }
+
+        /* Анимации */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
     </style>
 </head>
 <body>
@@ -93,12 +190,12 @@
         </div>
 
         <div class="summary" id="summaryBlock">
-            <div class="stat-card"><h3>💵 Доходы</h3><div class="value val-income" id="sumIncome">0 ₽</div></div>
-            <div class="stat-card"><h3>💸 Расходы</h3><div class="value val-expense" id="sumExpense">0 ₽</div></div>
-            <div class="stat-card"><h3>⚖️ Баланс</h3><div class="value val-balance" id="sumBalance">0 ₽</div></div>
-            <div class="stat-card"><h3>🏦 Накопления</h3><div class="value val-savings" id="sumSavings">0 ₽</div></div>
-            <div class="stat-card"><h3>🤝 Мне должны</h3><div class="value val-debt-active" id="sumDebtActive">0 ₽</div></div>
-            <div class="stat-card"><h3>🙏 Я должен</h3><div class="value val-debt-passive" id="sumDebtPassive">0 ₽</div></div>
+            <div class="stat-card" style="animation-delay: 0.1s"><h3>💵 Доходы</h3><div class="value val-income" id="sumIncome">0 ₽</div></div>
+            <div class="stat-card" style="animation-delay: 0.2s"><h3>💸 Расходы</h3><div class="value val-expense" id="sumExpense">0 ₽</div></div>
+            <div class="stat-card" style="animation-delay: 0.3s"><h3>⚖️ Баланс</h3><div class="value val-balance" id="sumBalance">0 ₽</div></div>
+            <div class="stat-card" style="animation-delay: 0.4s"><h3>🏦 Накопления</h3><div class="value val-savings" id="sumSavings">0 ₽</div></div>
+            <div class="stat-card" style="animation-delay: 0.5s"><h3>🤝 Мне должны</h3><div class="value val-debt-active" id="sumDebtActive">0 ₽</div></div>
+            <div class="stat-card" style="animation-delay: 0.6s"><h3>🙏 Я должен</h3><div class="value val-debt-passive" id="sumDebtPassive">0 ₽</div></div>
         </div>
 
         <div class="entries" id="entriesList"></div>
@@ -109,6 +206,23 @@
         let ALL_ENTRIES = [];
         let activeTypes = new Set(['income', 'expense', 'savings', 'debt']);
         let currentTimeFilter = 'all';
+
+        // Функция анимации чисел
+        function animateValue(obj, start, end, duration) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const value = Math.floor(progress * (end - start) + start);
+                obj.innerHTML = value.toLocaleString('ru-RU') + ' ₽';
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                } else {
+                    obj.innerHTML = end.toLocaleString('ru-RU') + ' ₽';
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
 
         function parseFinanceData(text) {
             if (text.trim().startsWith('{')) {
@@ -128,7 +242,6 @@
                 const typeLine = lines[0].trim();
                 let baseType = 'unknown';
                 
-                // Определение базового типа по заголовку
                 if (typeLine.includes('💸')) baseType = 'savings';
                 else if (typeLine.includes('🟢') || typeLine.toLowerCase().includes('доход')) baseType = 'income';
                 else if (typeLine.includes('🔴') || typeLine.toLowerCase().includes('расход')) baseType = 'expense';
@@ -142,22 +255,15 @@
                 let finalType = baseType;
                 let debtDirection = null; 
 
-                // --- ИСПРАВЛЕННАЯ ЛОГИКА РАСПОЗНАВАНИЯ ДОЛГОВ ---
-
-                // 1. Проверка на возвраты (погашение)
                 if (catLower.includes('вернули мне') || catLower.includes('мне вернули')) {
                     finalType = 'paid'; debtDirection = 'paid-active';
                 } 
                 else if (catLower.includes('я вернул') || catLower.includes('вернул долг')) {
                     finalType = 'paid'; debtDirection = 'paid-passive';
                 }
-                // 2. Проверка на "Я должен" (Пассивный долг)
-                // Если в тексте есть "нанял", "взял", "занял у" -> это мой долг
                 else if (catLower.includes('нанял') || catLower.includes('взял в долг') || catLower.includes('занял у')) {
                     finalType = 'debt-passive'; debtDirection = 'passive';
                 }
-                // 3. Проверка на "Мне должны" (Активный долг)
-                // Если в тексте есть "дал в долг", "отдал", "в долг" (без "взял") -> это долг мне
                 else if (catLower.includes('дал в долг') || catLower.includes('отдал') || (catLower.includes('в долг') && !catLower.includes('взял'))) {
                     finalType = 'debt-active'; debtDirection = 'active';
                 }
@@ -265,14 +371,14 @@
 
         function renderDashboard(entries) {
             let totalIncome = 0, totalExpense = 0, totalSavings = 0;
-            let totalDebtActive = 0; // Мне должны
-            let totalDebtPassive = 0; // Я должен
+            let totalDebtActive = 0; 
+            let totalDebtPassive = 0; 
 
             const container = document.getElementById('entriesList');
             container.innerHTML = '';
             
             if (entries.length === 0) {
-                container.innerHTML = '<div class="empty-state">📭 Нет записей.</div>';
+                container.innerHTML = '<div class="empty-state">📭 Нет записей для выбранных фильтров.</div>';
                 updateSummary(0, 0, 0, 0, 0, 0);
                 return;
             }
@@ -283,12 +389,11 @@
                 return b.dateObj.getTime() - a.dateObj.getTime();
             });
 
-            entries.forEach(e => {
+            entries.forEach((e, index) => {
                 if (e.type === 'income') totalIncome += e.amount;
                 if (e.type === 'expense') totalExpense += e.amount;
                 if (e.type === 'savings') totalSavings += e.amount;
                 
-                // Логика долгов
                 if (e.debtDirection === 'active') totalDebtActive += e.amount;
                 if (e.debtDirection === 'passive') totalDebtPassive += e.amount;
                 if (e.debtDirection === 'paid-active') totalDebtActive -= e.amount; 
@@ -296,6 +401,7 @@
 
                 const card = document.createElement('div');
                 card.className = `entry-card ${e.type}`;
+                card.style.animationDelay = `${index * 0.05}s`; // Каскадная анимация
                 
                 let badgeText = e.category;
                 if (e.debtDirection === 'paid-active') badgeText = '✅ Вернули мне';
@@ -310,6 +416,7 @@
                     </div>
                     <div class="entry-body">
                         <span class="amount">${e.amount.toLocaleString('ru-RU')} ₽</span>
+                        ${e.category ? `<span class="category">${e.category}</span>` : ''}
                         ${e.comment ? `<span class="comment">💬 ${e.comment}</span>` : ''}
                     </div>
                 `;
@@ -321,12 +428,24 @@
         }
 
         function updateSummary(income, expense, balance, savings, debtActive, debtPassive) {
-            document.getElementById('sumIncome').textContent = income.toLocaleString('ru-RU') + ' ₽';
-            document.getElementById('sumExpense').textContent = expense.toLocaleString('ru-RU') + ' ₽';
-            document.getElementById('sumBalance').textContent = balance.toLocaleString('ru-RU') + ' ₽';
-            document.getElementById('sumSavings').textContent = savings.toLocaleString('ru-RU') + ' ₽';
-            document.getElementById('sumDebtActive').textContent = debtActive.toLocaleString('ru-RU') + ' ₽';
-            document.getElementById('sumDebtPassive').textContent = debtPassive.toLocaleString('ru-RU') + ' ₽';
+            // Анимация чисел
+            animateValue(document.getElementById('sumIncome'), 0, income, 1000);
+            animateValue(document.getElementById('sumExpense'), 0, expense, 1000);
+            animateValue(document.getElementById('sumSavings'), 0, savings, 1000);
+            animateValue(document.getElementById('sumDebtActive'), 0, debtActive, 1000);
+            animateValue(document.getElementById('sumDebtPassive'), 0, debtPassive, 1000);
+            
+            const balanceEl = document.getElementById('sumBalance');
+            animateValue(balanceEl, 0, balance, 1000);
+            
+            // Цветовой индикатор баланса
+            if (balance < 0) {
+                balanceEl.classList.add('negative');
+            } else {
+                balanceEl.classList.remove('negative');
+            }
+
+            document.getElementById('updateTime').textContent = `🕒 Обновлено: ${new Date().toLocaleString('ru-RU', { hour: '2-digit', minute:'2-digit' })}`;
         }
 
         document.addEventListener('DOMContentLoaded', () => {
