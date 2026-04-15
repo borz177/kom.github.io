@@ -10,8 +10,8 @@
             --income: #10b981; --income-bg: #d1fae5;
             --expense: #ef4444; --expense-bg: #fee2e2;
             --savings: #3b82f6; --savings-bg: #dbeafe;
-            --debt-active: #f59e0b; --debt-active-bg: #fef3c7;
-            --debt-passive: #8b5cf6; --debt-passive-bg: #ede9fe;
+            --debt-active: #f59e0b; --debt-active-bg: #fef3c7; /* Мне должны (Активный) */
+            --debt-passive: #8b5cf6; --debt-passive-bg: #ede9fe; /* Я должен (Пассивный) */
             --paid: #9ca3af; --paid-bg: #f3f4f6;
             --primary: #3b82f6; --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
         }
@@ -142,35 +142,24 @@
                 let finalType = baseType;
                 let debtDirection = null; 
 
-                // --- ЛОГИКА РАСПОЗНАВАНИЯ ДОЛГОВ ВЕЗДЕ ---
+                // --- ИСПРАВЛЕННАЯ ЛОГИКА РАСПОЗНАВАНИЯ ДОЛГОВ ---
 
-                // 1. Если это специальный блок "Долги"
-                if (baseType === 'debt-wrapper') {
-                    if (catLower.includes('вернули мне') || catLower.includes('мне вернули')) {
-                        finalType = 'paid'; debtDirection = 'paid-active';
-                    } else if (catLower.includes('я вернул') || catLower.includes('вернул долг')) {
-                        finalType = 'paid'; debtDirection = 'paid-passive';
-                    } else if (catLower.includes('в долг') || catLower.includes('дал в долг')) {
-                        finalType = 'debt-active'; debtDirection = 'active';
-                    } else if (catLower.includes('взял в долг')) {
-                        finalType = 'debt-passive'; debtDirection = 'passive';
-                    }
+                // 1. Проверка на возвраты (погашение)
+                if (catLower.includes('вернули мне') || catLower.includes('мне вернули')) {
+                    finalType = 'paid'; debtDirection = 'paid-active';
                 } 
-                // 2. Если это обычный Доход, но с пометкой "В долг" (ты дал в долг)
-                else if (baseType === 'income' && (catLower.includes('в долг') || catLower.includes('дал в долг'))) {
-                    finalType = 'debt-active'; debtDirection = 'active';
+                else if (catLower.includes('я вернул') || catLower.includes('вернул долг')) {
+                    finalType = 'paid'; debtDirection = 'paid-passive';
                 }
-                // 3. Если это обычный Расход, но с пометкой "В долг" (ты взял в долг)
-                else if (baseType === 'expense' && (catLower.includes('в долг') || catLower.includes('взял в долг'))) {
+                // 2. Проверка на "Я должен" (Пассивный долг)
+                // Если в тексте есть "нанял", "взял", "занял у" -> это мой долг
+                else if (catLower.includes('нанял') || catLower.includes('взял в долг') || catLower.includes('занял у')) {
                     finalType = 'debt-passive'; debtDirection = 'passive';
                 }
-                // 4. Если это Доход с пометкой "Вернули" (погашение активного долга)
-                else if (baseType === 'income' && (catLower.includes('вернули') || catLower.includes('возврат'))) {
-                     finalType = 'paid'; debtDirection = 'paid-active';
-                }
-                // 5. Если это Расход с пометкой "Вернул" (погашение пассивного долга)
-                else if (baseType === 'expense' && (catLower.includes('вернул') || catLower.includes('возврат'))) {
-                     finalType = 'paid'; debtDirection = 'paid-passive';
+                // 3. Проверка на "Мне должны" (Активный долг)
+                // Если в тексте есть "дал в долг", "отдал", "в долг" (без "взял") -> это долг мне
+                else if (catLower.includes('дал в долг') || catLower.includes('отдал') || (catLower.includes('в долг') && !catLower.includes('взял'))) {
+                    finalType = 'debt-active'; debtDirection = 'active';
                 }
 
                 const dateMatch = rawContent.match(/(\d{2}-\d{2}-\d{4})/);
